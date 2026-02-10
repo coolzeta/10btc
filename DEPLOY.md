@@ -1,111 +1,182 @@
-# GitHub Pages 部署指南
+# GitHub Pages 部署指南 - 自定义域名版本
 
-## 自动部署配置
+## 🌐 使用自定义域名 10btc.top
 
-本项目已配置 GitHub Actions 自动部署到 GitHub Pages。
+### 已完成的配置：
 
-### 步骤 1: 创建 GitHub 仓库
+1. ✅ Next.js 静态导出（`output: 'export'`）
+2. ✅ GitHub Actions CI/CD 自动部署
+3. ✅ CNAME 文件（指向 10btc.top）
+4. ✅ 无 basePath（使用根路径）
 
-1. 访问 https://github.com/new
-2. 创建新仓库，名称建议为 `10btctotop`
-3. 不要初始化 README、.gitignore 或 license（本地已有）
+---
 
-### 步骤 2: 关联远程仓库
+## 📋 部署步骤
 
-```bash
-git remote add origin https://github.com/YOUR_USERNAME/10btctotop.git
+### 1. GitHub Pages 配置
+
+访问：https://github.com/coolzeta/10btc/settings/pages
+
+**配置如下：**
+- **Source**: 选择 **"GitHub Actions"**
+- **Custom domain**: 输入 `10btc.top`
+- **Enforce HTTPS**: 建议勾选（等 DNS 生效后）
+
+### 2. DNS 配置
+
+在你的域名服务商（如阿里云、Cloudflare 等）设置 DNS：
+
+#### 方案 A：使用 A 记录（推荐）
+
+添加以下 4 条 A 记录，指向 GitHub Pages 的 IP：
+
+```
+类型    名称    值
+A       @       185.199.108.153
+A       @       185.199.109.153
+A       @       185.199.110.153
+A       @       185.199.111.153
 ```
 
-### 步骤 3: 提交并推送代码
+#### 方案 B：使用 CNAME 记录
+
+如果你想用 www 子域名：
+
+```
+类型      名称    值
+CNAME     www     coolzeta.github.io
+```
+
+然后在 GitHub Pages 设置中填写 `www.10btc.top`
+
+### 3. 等待 DNS 生效
+
+- DNS 生效时间：5分钟 - 48小时（通常 10-30 分钟）
+- 检查是否生效：
+  ```bash
+  # Mac/Linux
+  dig 10btc.top
+  
+  # Windows
+  nslookup 10btc.top
+  ```
+
+### 4. 启用 HTTPS
+
+DNS 生效后：
+1. 返回 GitHub Pages 设置
+2. 勾选 **"Enforce HTTPS"**
+3. 等待 SSL 证书自动配置（通常几分钟）
+
+---
+
+## 🔄 自动更新流程
+
+修改代码后，只需：
 
 ```bash
-# 添加所有文件
 git add .
-
-# 提交
-git commit -m "Initial commit: Bitcoin website with animations and SEO"
-
-# 推送到 GitHub
-git push -u origin main
-```
-
-### 步骤 4: 配置 GitHub Pages
-
-1. 访问仓库的 Settings → Pages
-2. 在 "Source" 下选择 **GitHub Actions**
-3. 保存设置
-
-### 步骤 5: 自动部署
-
-推送代码后，GitHub Actions 会自动：
-- ✅ 安装依赖
-- ✅ 构建 Next.js 项目
-- ✅ 生成静态文件
-- ✅ 部署到 GitHub Pages
-
-查看部署状态：访问仓库的 "Actions" 标签页
-
-### 访问网站
-
-部署成功后，网站将在以下地址访问：
-```
-https://YOUR_USERNAME.github.io/10btctotop/
-```
-
-### 自动更新
-
-每次推送到 `main` 分支时，网站会自动重新构建和部署：
-
-```bash
-# 修改代码后
-git add .
-git commit -m "Update content"
+git commit -m "你的更新说明"
 git push
 ```
 
-## 配置说明
+GitHub Actions 会自动：
+- ✅ 构建 Next.js 静态文件
+- ✅ 部署到 GitHub Pages
+- ✅ CNAME 文件会被保留
 
-### next.config.ts
-- `output: 'export'` - 启用静态导出
-- `images.unoptimized: true` - 禁用图片优化（静态导出需要）
-- `basePath: '/10btctotop'` - 设置 GitHub Pages 子路径
+---
 
-### .github/workflows/deploy.yml
-GitHub Actions 工作流配置：
-- 触发条件：push 到 main 分支
-- 构建步骤：安装依赖 → 构建 → 上传
-- 部署步骤：部署到 GitHub Pages
+## 🌍 访问网站
 
-## 本地预览
+配置完成后，访问：
+- **主域名**: https://10btc.top
+- **www 子域名**（如果配置了）: https://www.10btc.top
+
+---
+
+## 🛠️ 故障排查
+
+### DNS 未生效
+```bash
+# 检查 DNS
+dig 10btc.top
+
+# 应该看到指向 GitHub Pages IP 的 A 记录
+```
+
+### GitHub Pages 显示 404
+1. 确认 `public/CNAME` 文件存在且内容为 `10btc.top`
+2. 检查 GitHub Pages 设置中的 Custom domain
+3. 查看 Actions 构建日志
+
+### HTTPS 证书错误
+1. 等待 DNS 完全生效（可能需要几小时）
+2. 在 GitHub Pages 设置中点击 "Remove" 然后重新添加域名
+3. 等待证书自动配置
+
+### 样式丢失或资源 404
+确认：
+- ✅ `next.config.ts` 中 `basePath` 为空字符串
+- ✅ `public/.nojekyll` 文件存在
+
+---
+
+## 📊 当前配置摘要
+
+```
+仓库: https://github.com/coolzeta/10btc
+域名: 10btc.top
+部署方式: GitHub Actions
+构建命令: npm run build
+输出目录: out/
+```
+
+---
+
+## 🔧 本地测试
 
 ```bash
 # 开发模式
 npm run dev
 
-# 构建静态文件
+# 构建生产版本
 npm run build
 
 # 预览构建结果
 npx serve out
 ```
 
-## 故障排查
+---
 
-### 构建失败
-检查 GitHub Actions 日志：仓库 → Actions → 选择失败的 workflow
+## 📝 DNS 配置示例（各平台）
 
-### 404 错误
-确保：
-1. GitHub Pages 已启用
-2. Source 设置为 "GitHub Actions"
-3. basePath 配置正确
+### 阿里云
 
-### 样式丢失
-确认 `public/.nojekyll` 文件存在
+1. 登录阿里云控制台
+2. 域名 → 解析设置
+3. 添加 A 记录：
+   - 记录类型：A
+   - 主机记录：@
+   - 记录值：185.199.108.153（重复添加4个IP）
+   - TTL：10分钟
 
-## 自定义域名（可选）
+### Cloudflare
 
-1. 在仓库 Settings → Pages → Custom domain 添加域名
-2. 在域名 DNS 设置中添加 CNAME 记录指向 `YOUR_USERNAME.github.io`
-3. 更新 `next.config.ts` 中的 `basePath` 为空字符串
-4. 更新 `app/sitemap.ts` 中的 URL
+1. 登录 Cloudflare
+2. DNS → Add record
+3. 添加 A 记录（关闭橙色云朵代理）：
+   - Type: A
+   - Name: @
+   - IPv4 address: 185.199.108.153
+   - TTL: Auto
+   - 重复添加其他3个IP
+
+### 腾讯云 DNSPod
+
+1. 登录 DNSPod 控制台
+2. 添加记录
+3. 记录类型：A
+   - 主机记录：@
+   - 记录值：185.199.108.153
+   - 重复添加其他3个IP

@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/10btc' : '',
+  // 使用自定义域名，不需要 basePath
+  basePath: '',
   reactCompiler: true,
 };
 
