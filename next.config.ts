@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/10btctotop' : '',
+  basePath: process.env.NODE_ENV === 'production' ? '/10btc' : '',
   reactCompiler: true,
 };
 
