@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNMTI — 链圈人格物种鉴定局</title>
+  <style>
+    :root {
+      --bg: #0d0f1a;
+      --panel: #13172b;
+      --text: #e8eaf6;
+      --muted: #7986cb;
+      --line: #1e2a5e;
+      --soft: #1a1f3a;
+      --accent: #7c4dff;
+      --accent-strong: #b388ff;
+      --gold: #ffd740;
+      --green: #69f0ae;
+      --red: #ff5252;
+      --shadow: 0 16px 40px rgba(124, 77, 255, 0.15);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(ellipse at top left, #1a0533 0%, #0d0f1a 50%, #001a0a 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,77,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,77,255,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shell {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 28px;
+      margin-top: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,77,255,0.18), rgba(124,77,255,0) 70%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--accent-strong);
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 999px;
+      padding: 8px 12px;
+      margin-bottom: 16px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      max-width: 680px;
+      background: linear-gradient(135deg, #b388ff, #69f0ae, #ffd740);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-minimal {
+      min-height: 50vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 42px 20px;
+    }
+    .hero-minimal::after { display: none; }
+    .hero-minimal h1 { max-width: none; margin: 0; }
+
+    .ticker {
+      display: flex;
+      gap: 20px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+      justify-content: center;
+      font-size: 13px;
+    }
+    .ticker-item { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+    .ticker-item .up { color: var(--green); }
+    .ticker-item .down { color: var(--red); }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+      justify-content: center;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+      font: inherit;
+    }
+    button:hover { transform: translateY(-2px); }
+    button:disabled { cursor: not-allowed; opacity: 0.45; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7c4dff, #b388ff);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(124, 77, 255, 0.35);
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .btn-secondary {
+      background: var(--soft);
+      color: var(--accent-strong);
+      padding: 14px 24px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .test-wrap, .result-wrap { margin-top: 22px; padding: 22px; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .progress {
+      flex: 1;
+      min-width: 240px;
+      height: 10px;
+      background: var(--soft);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress > span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #7c4dff, #69f0ae);
+      border-radius: inherit;
+      transition: width .22s ease;
+    }
+
+    .progress-text { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+    .question-list { display: grid; gap: 16px; }
+
+    .question {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, #161b35, #111525);
+    }
+
+    .question-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--accent-strong);
+    }
+
+    .question-title { font-size: 16px; line-height: 1.7; white-space: pre-wrap; color: var(--text); }
+
+    .options { display: grid; gap: 10px; margin-top: 14px; }
+
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      cursor: pointer;
+      transition: border-color .16s ease, background .16s ease;
+    }
+    .option:hover { border-color: var(--accent); background: #1e1a40; }
+
+    .option input {
+      margin-top: 3px;
+      accent-color: var(--accent-strong);
+      transform: scale(1.1);
+      flex-shrink: 0;
+    }
+
+    .option-code { font-weight: 800; color: var(--accent-strong); min-width: 22px; }
+
+    .actions-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      padding-top: 6px;
+    }
+
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.7; }
+
+    .result-layout { display: grid; gap: 18px; }
+    .result-top {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .poster-box, .type-box, .analysis-box, .dim-box, .note-box {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, #161b35, #111525);
+    }
+
+    .poster-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      overflow: hidden;
+      position: relative;
+      background: radial-gradient(circle at top right, rgba(124,77,255,0.1), rgba(0,0,0,0) 50%),
+        linear-gradient(180deg, #161b35, #0d1020);
+    }
+
+    .poster-emoji { font-size: 96px; line-height: 1; }
+
+    .poster-caption {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+      text-align: center;
+      padding: 0 8px;
+    }
+
+    .type-kicker {
+      font-size: 12px;
+      color: var(--accent-strong);
+      margin-bottom: 8px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .type-name {
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #b388ff, #69f0ae);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .type-subname { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+
+    .match {
+      margin-top: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--accent-strong);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .analysis-box h3, .dim-box h3, .note-box h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: var(--accent-strong);
+    }
+
+    .analysis-box p { color: #c5cae9; font-size: 15px; line-height: 1.9; white-space: pre-wrap; }
+
+    .dim-list { display: grid; gap: 10px; }
+
+    .dim-item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: var(--soft);
+    }
+
+    .dim-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .dim-item-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .dim-item-score { color: var(--accent-strong); font-weight: 800; font-size: 13px; white-space: nowrap; }
+    .dim-item p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+
+    .note-box p { color: var(--muted); font-size: 14px; line-height: 1.8; }
+
+    .result-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .author-box {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #161b35, #111525);
+      overflow: hidden;
+    }
+    .author-box summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 18px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .author-box summary::-webkit-details-marker { display: none; }
+    .author-box summary::after {
+      content: '展开';
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-strong);
+      border: 1px solid var(--line);
+      background: var(--soft);
+      padding: 6px 10px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .author-box[open] summary::after { content: '收起'; }
+    .author-content { border-top: 1px solid var(--line); padding: 0 18px 18px; }
+    .author-content p { margin: 12px 0 0; color: var(--muted); font-size: 14px; line-height: 1.9; }
+
+    .runner-list { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .runner-item {
+      display: flex; align-items: center; gap: 8px;
+      border: 1px solid var(--line); border-radius: 12px;
+      padding: 8px 12px; background: var(--soft); font-size: 13px;
+    }
+    .runner-item .runner-rank { color: var(--muted); }
+    .runner-item .runner-name { color: var(--accent-strong); font-weight: 700; }
+    .runner-item .runner-pct { color: var(--muted); font-size: 12px; }
+
+    .btn-copy-ok { background: linear-gradient(135deg, #00c853, #69f0ae) !important; }
+
+    @media (max-width: 860px) { .result-top { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) {
+      .shell { padding: 14px 12px 42px; }
+      .hero, .test-wrap, .result-wrap { padding: 16px; }
+      .question-title { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ===================== INTRO ===================== -->
+  <section id="intro" class="screen active">
+    <div class="hero card hero-minimal">
+      <div class="eyebrow">🪙 CNMTI · 链圈物种鉴定局 · 国家认证</div>
+      <h1>MBTI已经过时，CNMTI来了。</h1>
+      <div style="color:#7986cb;font-size:15px;line-height:1.85;max-width:640px;margin-top:14px;text-align:center;">
+        <strong style="color:#b388ff;">Crypto Neurotic Market Trauma Inventory</strong><br>
+        加密神经质市场创伤量表 · 共25题 · 全程无痛<br>
+        不检测智商，只鉴定你在链圈是哪种生物。<br>
+        <span style="font-size:12px;color:#3d4a7a;">（测完发现自己是韭菜，后果自负）</span>
+      </div>
+      <div class="ticker">
+        <div class="ticker-item">BTC <span class="up">▲ 又创新高</span></div>
+        <div class="ticker-item">ETH <span class="down">▼ 继续腰斩</span></div>
+        <div class="ticker-item">土狗币 <span class="up">▲ 又一个百倍</span></div>
+        <div class="ticker-item">你的积蓄 <span class="down">▼ 归零中</span></div>
+      </div>
+      <div class="hero-actions">
+        <button id="startBtn" class="btn-primary">开始鉴定 →</button>
+      </div>
+      <div style="margin-top:2rem;font-size:12px;color:#3d4a7a;">本测试纯属娱乐，不构成任何投资建议。亏了别找我，找你的KOL去。</div>
+    </div>
+  </section>
+
+  <!-- ===================== TEST ===================== -->
+  <section id="test" class="screen">
+    <div class="test-wrap card">
+      <div class="topbar">
+        <div class="progress"><span id="progressBar"></span></div>
+        <div class="progress-text" id="progressText">0 / 25</div>
+      </div>
+      <div id="questionList" class="question-list"></div>
+      <div class="actions-bottom">
+        <div class="hint" id="testHint">全选完才放行。币价每秒都在跌，你倒是先把题做完。</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button id="backIntroBtn" class="btn-secondary">返回首页</button>
+          <button id="submitBtn" class="btn-primary" disabled>提交并查看结果</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== RESULT ===================== -->
+  <section id="result" class="screen">
+    <div class="result-wrap card">
+      <div class="result-layout">
+        <div class="result-top">
+          <div class="poster-box" id="posterBox">
+            <div class="poster-emoji" id="posterEmoji">🪙</div>
+            <div id="posterCaption" class="poster-caption">链圈第一名就是你了。</div>
+          </div>
+
+          <div class="type-box">
+            <div class="type-kicker" id="resultModeKicker">你的主类型</div>
+            <div class="type-name" id="resultTypeName">HODL（钻石手）</div>
+            <div class="match" id="matchBadge">匹配度 92%</div>
+            <div class="type-subname" id="resultTypeSub">系统备注显示于此。</div>
+          </div>
+        </div>
+
+        <div class="analysis-box">
+          <h3>该物种的链圈行为图谱</h3>
+          <p id="resultDesc"></p>
+        </div>
+
+        <div class="analysis-box" id="runnersUpBox" style="display:none;">
+          <h3>其他高度相似物种</h3>
+          <div class="runner-list" id="runnerList"></div>
+        </div>
+
+        <div class="dim-box">
+          <h3>十二维度链圈创伤评分</h3>
+          <div id="dimList" class="dim-list"></div>
+        </div>
+
+        <div class="note-box">
+          <h3>⚠️ 风险提示</h3>
+          <p id="funNote">本测试仅供娱乐，不构成任何投资建议。你测出HODL也不代表BTC会涨。</p>
+        </div>
+
+        <details class="author-box">
+          <summary>关于 CNMTI</summary>
+          <div class="author-content">
+            <p>CNMTI（Crypto Neurotic Market Trauma Inventory，加密神经质市场创伤量表）诞生于某个深夜——作者盯着一片绿色的持仓截图，突然产生了一个深刻的哲学疑问：链圈里的人，到底是哪种生物？</p>
+            <p>经过对中文互联网上数以千计的链圈群聊记录、KOL视频、亏损截图和玄学分析的系统性研究，作者归纳出了本套链圈物种分类体系。</p>
+            <p>本测试模仿 SBTI（原作者：B站@蛆肉儿串儿）的格式，致敬原作。如有冒犯任何真实人物或物种，那一定是你想多了。</p>
+            <p>免责声明：CNMTI 不构成投资建议、心理诊断、法律意见或任何意义上的专业意见。不构成。真的不构成。</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="result-actions">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button id="restartBtn" class="btn-secondary">重新鉴定</button>
+          <button id="copyBtn" class="btn-secondary">📋 复制结果</button>
+          <button id="toTopBtn" class="btn-primary">回到首页</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ============================================================
+//  DIMENSIONS
+// ============================================================
+const dimensionMeta = {
+  R1: { name: 'R1 风险偏好', model: '交易心理' },
+  R2: { name: 'R2 亏损承受力', model: '交易心理' },
+  R3: { name: 'R3 FOMO指数', model: '交易心理' },
+  I1: { name: 'I1 信息甄别力', model: '认知模型' },
+  I2: { name: 'I2 技术分析信仰', model: '认知模型' },
+  I3: { name: 'I3 叙事构建能力', model: '认知模型' },
+  C1: { name: 'C1 社区黏性', model: '社交行为' },
+  C2: { name: 'C2 布道热情', model: '社交行为' },
+  C3: { name: 'C3 KOL崇拜指数', model: '社交行为' },
+  M1: { name: 'M1 暴富执念', model: '动机模型' },
+  M2: { name: 'M2 钻石手韧性', model: '动机模型' },
+  M3: { name: 'M3 去中心化信仰', model: '动机模型' },
+};
+
+const dimensionOrder = ['R1','R2','R3','I1','I2','I3','C1','C2','C3','M1','M2','M3'];
+
+// ============================================================
+//  QUESTIONS  (4 options each, values 1-4)
+// ============================================================
+const questions = [
+  // ---- R1 风险偏好 ----
+  {
+    id: 'q1', dim: 'R1',
+    text: '你刚发完工资，手还没捂热，闺蜜发来消息："有个土狗币，dev刚rug了一次但已经回来了，这次肯定稳！"你会？',
+    options: [
+      { label: '已转账。问什么问，上车再说，下车的都是傻子。', value: 4 },
+      { label: '冲一点点，就当买彩票，反正也不指望这个月吃饭。', value: 3 },
+      { label: '发她一个问号，然后去查了三小时链上数据。', value: 2 },
+      { label: '把她拉黑，然后反思自己为什么有这种朋友。', value: 1 },
+    ]
+  },
+  {
+    id: 'q2', dim: 'R1',
+    text: '某聪明钱地址刚刚买入一个你完全没听说过的代币，合约三天前刚部署，流动性池里只有0.3个ETH。你的操作是？',
+    options: [
+      { label: '跟！聪明钱买了那就是圣旨！一键梭哈！手速就是命！', value: 4 },
+      { label: '扔进去小仓位，万一是下一个PEPE呢，万一呢。', value: 3 },
+      { label: '先看看持仓分布，再看看推特，再想想……算了还是看看。', value: 2 },
+      { label: '流动性0.3个ETH？这不是投资，这是直接往厕所里冲钱。', value: 1 },
+    ]
+  },
+  // ---- R2 亏损承受力 ----
+  {
+    id: 'q3', dim: 'R2',
+    text: '你重仓的币昨晚插针跌了65%，你今早睁眼看到行情，你的身体反应是？',
+    options: [
+      { label: '心跳正常，手已经在加仓了，这叫什么？这叫机会。', value: 4 },
+      { label: '胃疼了一下，缓了十分钟，说服自己这是正常波动。', value: 3 },
+      { label: '直接把手机扣在枕头下，假装自己还没看见。', value: 2 },
+      { label: '颤抖着打开APP，全部割掉，然后在厕所里坐了四十分钟。', value: 1 },
+    ]
+  },
+  {
+    id: 'q4', dim: 'R2',
+    text: '有人在群里问："你们最大亏损比例是多少？"你怎么回答？',
+    options: [
+      { label: '超过95%，当时我一边在加仓一边在哼歌，精神状态是真的好。', value: 4 },
+      { label: '大概七八十，扛过来了，现在提起来只当故事讲。', value: 3 },
+      { label: '亏了40%就感觉天塌了，发誓再也不碰，然后又碰了。', value: 2 },
+      { label: '我亏了8%就割肉了，我不后悔，我只是每天午夜都在看它现在多少钱。', value: 1 },
+    ]
+  },
+  // ---- R3 FOMO指数 ----
+  {
+    id: 'q5', dim: 'R3',
+    text: '凌晨3点18分，你已经睡着了。手机突然震动，是一个陌生号码发来的微信："哥，XXXAI刚刚被Elon转推了，现在进还来得及！"你会？',
+    options: [
+      { label: '立刻坐起来，眼睛都没睁开就开始转账，手速比意识快。', value: 4 },
+      { label: '迷迷糊糊打开手机看了一眼，挣扎了五分钟，进了一点。', value: 3 },
+      { label: '看了眼，截图，继续睡，明天再说，涨没了就算了。', value: 2 },
+      { label: '把手机调成勿扰，拉黑这个号，继续睡，明天跟没发生一样。', value: 1 },
+    ]
+  },
+  {
+    id: 'q6', dim: 'R3',
+    text: '你正在吃午饭，群里炸了："XX链刚刚官宣和NASA合作！！！宇宙级别的消息！！！上车！！！"附上一张字体很花哨的英文截图。你？',
+    options: [
+      { label: '饭不吃了！筷子一扔，冲！NASA都来了还等什么！', value: 4 },
+      { label: '边吃边查，感觉有点东西，先买一点点，真的一点点。', value: 3 },
+      { label: '去NASA官网搜了一下，没有，截图是P的，继续吃饭。', value: 2 },
+      { label: '截图举报。然后默默记住发消息的那个人是谁。', value: 1 },
+    ]
+  },
+  // ---- I1 信息甄别 ----
+  {
+    id: 'q7', dim: 'I1',
+    text: '某项目白皮书第一句话是："本项目融合AI、区块链、量子纠缠、元宇宙与人类集体意识，构建去中心化的星际文明价值网络。"你的判断是？',
+    options: [
+      { label: '看不懂，但感觉好厉害，这就是未来！冲！我信科技！', value: 1 },
+      { label: '有点悬，但有大V站台，大V总不会害我，冲一点。', value: 2 },
+      { label: '话术太花，先去看团队背景，再看链上数据，再说。', value: 3 },
+      { label: '这不是白皮书，这是我见过最贵的散文诗，作者该去写网文。', value: 4 },
+    ]
+  },
+  {
+    id: 'q8', dim: 'I1',
+    text: '一个注册两周、没有头像的推特账号发文："内部消息：某TOP5交易所明日暴雷，赶紧提币！！！已有内鬼确认！！！"你会？',
+    options: [
+      { label: '提！截图转发所有群！打给妈妈让她也提！宁可信其有！', value: 1 },
+      { label: '有点慌，先把大头提了，剩下的观望，万一是真的呢。', value: 2 },
+      { label: '去看链上储备金数据，再看看其他消息源，没动静就算了。', value: 3 },
+      { label: '点开他的历史推文，发现他每个月都在爆料不同的交易所，关。', value: 4 },
+    ]
+  },
+  // ---- I2 技术分析 ----
+  {
+    id: 'q9', dim: 'I2',
+    text: '你在K线图上画了37根线，三条均线，两个通道，四个斐波那契，外加一个神秘的"宇宙支撑位"。你现在的感受是？',
+    options: [
+      { label: '我根本不画线，我靠梦境和星座，昨晚梦见涨，今天就买了。', value: 1 },
+      { label: '我也画过，画完更迷茫了，线太多就等于没有线。', value: 2 },
+      { label: '我只画两三根关键线，够用就行，不搞玄学。', value: 3 },
+      { label: '我就是这么画的，37根还少，我还有4个时间框架要切换。', value: 4 },
+    ]
+  },
+  {
+    id: 'q10', dim: 'I2',
+    text: '你决定买入某个币的那一刻，真实的决策依据是什么？',
+    options: [
+      { label: '今天出门看见一辆车牌是"8888"，觉得是信号，买了。', value: 1 },
+      { label: '群里兄弟们都说不错，大家一起买感觉稳一点，就买了。', value: 2 },
+      { label: '看了项目方背景，研究了一下赛道竞争，觉得有逻辑，买了。', value: 3 },
+      { label: 'MACD底背离+RSI超卖+布林带下轨+成交量萎缩共振，教科书级别，买了。', value: 4 },
+    ]
+  },
+  // ---- I3 叙事能力 ----
+  {
+    id: 'q11', dim: 'I3',
+    text: '你把三个月工资全押在一个没人听说过的新公链上。同事问你为什么，你怎么解释？',
+    options: [
+      { label: '（沉默，看窗外，无法解释，但内心坚定）', value: 1 },
+      { label: '"赛道感觉挺好的……反正就那样……你懂的。"（说不清楚）', value: 2 },
+      { label: '"这条链的TPS和费用结构有明显优势，生态还在早期。"', value: 3 },
+      { label: '"你不懂。这是下一个以太坊。这是互联网时刻。这是给你最后一次上车机会，十年后你会跪谢我。"', value: 4 },
+    ]
+  },
+  {
+    id: 'q12', dim: 'I3',
+    text: '你的朋友刚刚在一个土狗项目里亏了十万，来找你哭诉。你的第一反应是说？',
+    options: [
+      { label: '"……我不知道说什么。"（沉默，递纸巾）', value: 1 },
+      { label: '"哎，当交学费了，下次记住别all in。"', value: 2 },
+      { label: '"这个项目我之前看了有点问题，下次我帮你看看。"', value: 3 },
+      { label: '"你亏了？不对，你这是在播种！熊市播种，牛市收获！你现在不加仓等什么！我给你讲个故事……"', value: 4 },
+    ]
+  },
+  // ---- C1 社区黏性 ----
+  {
+    id: 'q13', dim: 'C1',
+    text: '请如实描述你手机里加密货币相关群组的数量和状态：',
+    options: [
+      { label: '一个都没有。我独自在黑暗中交易，不需要同类。', value: 1 },
+      { label: '三四个，基本不看，偶尔扫一眼，大部分已设为免打扰。', value: 2 },
+      { label: '十几个，每天刷，偶尔发言，是群里那种"不说话但一直在"的存在。', value: 3 },
+      { label: '我数不清了。我的手机每小时有300条未读，我已经和通知融为一体。', value: 4 },
+    ]
+  },
+  {
+    id: 'q14', dim: 'C1',
+    text: '你花了一年时间深耕的那个链圈社区，今天宣布永久解散。你的反应是？',
+    options: [
+      { label: '哦。（点了个确认，退群，生活继续）', value: 1 },
+      { label: '有点可惜，但也无所谓，下一个群还在等着我。', value: 2 },
+      { label: '难受了一会儿，给几个混得熟的发了消息，保持联系。', value: 3 },
+      { label: '我当场崩溃。我在群里认识的人比现实中的朋友还真实。我连夜写了悼文，建了新群，取名"XX精神永存"。', value: 4 },
+    ]
+  },
+  // ---- C2 布道热情 ----
+  {
+    id: 'q15', dim: 'C2',
+    text: '你妈问你最近在搞什么投资。你会怎么回答？',
+    options: [
+      { label: '"没有，在存钱。"（撒谎，但为了她好）', value: 1 },
+      { label: '"就是做点小投资，不多，别问。"（话题终止）', value: 2 },
+      { label: '"在买比特币，就是那个数字货币，有点涨有点跌，别担心。"', value: 3 },
+      { label: '"妈！你坐下！我给你从2008年金融危机讲起，讲到中本聪，讲到为什么你的养老金不安全而比特币才是……"（三小时后她已睡着）', value: 4 },
+    ]
+  },
+  {
+    id: 'q16', dim: 'C2',
+    text: '你的前任/暗恋对象突然联系你，说想了解一下加密货币。你会？',
+    options: [
+      { label: '这是投资问题还是感情问题？算了，统一拒绝回答。', value: 1 },
+      { label: '简单回了两句，推荐了一篇文章，礼貌结束对话。', value: 2 },
+      { label: '认认真真科普了一小时，发了三个链接，顺便找回了联系。', value: 3 },
+      { label: '发了一个两万字的区块链入门文档，外加语音通话讲了四小时，感情没恢复，但他/她已经开户了。', value: 4 },
+    ]
+  },
+  // ---- C3 KOL崇拜 ----
+  {
+    id: 'q17', dim: 'C3',
+    text: '你最信的那个链圈大V，刚刚在直播里说："这个项目我个人非常看好，已经建仓了。"你的反应是？',
+    options: [
+      { label: '直播还没结束，我已经全仓买完了，爱了爱了，他说的都对。', value: 4 },
+      { label: '他说了就进一点，就当跟单，毕竟他以前还真挺准的。', value: 3 },
+      { label: '记下来，自己去研究，他说的不一定对，但值得看看。', value: 2 },
+      { label: '大V说买，那基本就是出货信号了。我准备做空。', value: 1 },
+    ]
+  },
+  {
+    id: 'q18', dim: 'C3',
+    text: '你关注的分析师连续三个月预测全错，粉丝群里开始骂他。你会？',
+    options: [
+      { label: '在群里力排众议为他辩护："他只是时间点没踩准，方向是对的！"', value: 4 },
+      { label: '还是继续看，但不再全信，参考一下没坏处。', value: 3 },
+      { label: '已经不怎么看了，但还没退群，就是惯性留着。', value: 2 },
+      { label: '我在他连续第一次错的时候就取关了，我不养废物。', value: 1 },
+    ]
+  },
+  // ---- M1 暴富执念 ----
+  {
+    id: 'q19', dim: 'M1',
+    text: '说实话，你当初进链圈，最真实的动机是什么？',
+    options: [
+      { label: '财务自由，提前退休，最好是明年，最晚后年，不接受更长。', value: 4 },
+      { label: '主要想赚钱，但也觉得这技术挺有意思，两个都有。', value: 3 },
+      { label: '分散一下资产，跑赢通胀，不指望暴富，但也不拒绝。', value: 2 },
+      { label: '我是真的对区块链技术感兴趣，不为钱，你们不信拉倒。', value: 1 },
+    ]
+  },
+  {
+    id: 'q20', dim: 'M1',
+    text: '深夜，你盯着持仓界面，有没有认真算过"如果涨到X倍我能干什么"？',
+    options: [
+      { label: '算了，Excel表格都建好了，分了十个sheet，连退休地点气候都研究了。', value: 4 },
+      { label: '算了，大概估了一下，有点不好意思讲，但确实算了。', value: 3 },
+      { label: '偶尔脑子里闪过，但没认真算，感觉会招来厄运。', value: 2 },
+      { label: '没算过，我是理性投资者，不做幻想。（手机截图里有但不承认）', value: 1 },
+    ]
+  },
+  // ---- M2 韧性 ----
+  {
+    id: 'q21', dim: 'M2',
+    text: '熊市第三年，你的主仓位从最高点跌了88%，至今未回。你的现状是？',
+    options: [
+      { label: '继续持有，继续加仓，我等得起，比特币等得起，我们一起等。', value: 4 },
+      { label: '扛着，每天痛苦，但手没动，靠每天看K线维持信念。', value: 3 },
+      { label: '割了大半，留了点底仓，心态已经碎了，但至少不用天天看。', value: 2 },
+      { label: '全割了，已经告别链圈，现在炒A股，一样亏但节奏慢一点。', value: 1 },
+    ]
+  },
+  {
+    id: 'q22', dim: 'M2',
+    text: '量化一下你对加密货币的投入程度：你一天中有多少时间在看行情、刷消息、研究项目？',
+    options: [
+      { label: '基本全天。上厕所看，吃饭看，开会看，睡前看，这不叫投资，叫生活方式。', value: 4 },
+      { label: '4到6小时，早中晚各刷一遍，睡前还要来个总结复盘。', value: 3 },
+      { label: '1到2小时，早晚各一次，不算很沉迷，比较健康。', value: 2 },
+      { label: '买了就不看，涨了看到也不卖，跌了根本不敢开APP。', value: 1 },
+    ]
+  },
+  // ---- M3 去中心化信仰 ----
+  {
+    id: 'q23', dim: 'M3',
+    text: '你认为比特币存在的最大意义是什么？',
+    options: [
+      { label: '让我赚钱。其他的我不在乎，你跟我讲理想我跟你讲K线。', value: 1 },
+      { label: '抗通胀，对冲法币风险，顺便如果涨了也挺好。', value: 2 },
+      { label: '打破金融垄断，让每个人掌握自己的资产，这是有意义的事。', value: 3 },
+      { label: '这是人类文明史上最重要的发明！银行是压迫工具！中本聪是先知！我愿为此燃烧！', value: 4 },
+    ]
+  },
+  {
+    id: 'q24', dim: 'M3',
+    text: '朋友说他把所有资产都放在交易所里，你的反应是？',
+    options: [
+      { label: '我也是，方便，省事，交易所又不是明天就跑路。（大概率）', value: 1 },
+      { label: '"还行吧，大交易所应该没问题，我也有一些在里面。"', value: 2 },
+      { label: '"建议把大头转到冷钱包，交易所有风险，最好分开放。"', value: 3 },
+      { label: '"Not your keys, not your coins！你这是在把命交给别人！我有三个硬件钱包，助记词刻在钢板上，分三个城市保管，你听我的！"', value: 4 },
+    ]
+  },
+  // ---- SPECIAL: 韭菜门 ----
+  {
+    id: 'sp_pua_gate',
+    special: true,
+    kind: 'pua_gate',
+    text: '⚠️ 保密题，本局存档，不对外公开：\n你有没有给"链圈成功学"、付费内参群、KOL私信喊单服务，或任何声称"内部消息"的东西交过钱？',
+    options: [
+      { label: '没有，我还没傻到这程度。（自我感觉良好）', value: 1 },
+      { label: '有一点点……金额不多……不要追问……', value: 2 },
+      { label: '被割过，割得不轻，至今是创伤。', value: 3 },
+      { label: '我就是卖课的那个，谢谢。', value: 4 },
+    ]
+  },
+  {
+    id: 'sp_pua_detail',
+    special: true,
+    kind: 'pua_trigger',
+    text: '既然你亲口承认了，那就继续坦白：你卖课的核心话术，属于哪个宗门？',
+    options: [
+      { label: '"跟我学三个月，从月薪3000到年入百万，学员截图为证，随时可联系！"', value: 1 },
+      { label: '"我不是在卖课，我是在渡人，是在传递价值，是在帮有缘人完成使命。"', value: 2 },
+      { label: '"原价19999，今天最后一天，只要698，名额只剩3个，截图锁定。"', value: 3 },
+      { label: '"这个机会不是卖的，是我精选的，你能看到这条消息说明你和别人不一样。"', value: 4 },
+    ]
+  },
+];
+
+// ============================================================
+//  TYPES
+// ============================================================
+const TYPE_LIBRARY = {
+  "HODL": {
+    code: "HODL",
+    cn: "钻石手",
+    intro: "跌了？继续拿。涨了？还没到山顶，继续拿。问我什么时候卖？再等等。",
+    desc: `HODL人格是加密货币世界的定海神针，是那种能在BTC暴跌80%时满脸平静说"这都是正常波动"的珍稀生物。他们不是没有感情——恰恰相反，HODL对自己持有的资产，有一种超越理性的、近乎宗教式的忠诚。旁人在割肉止损时痛哭流涕，HODL在旁边面带微笑，往购物车里再加一枚。HODL的字典里没有"熊市"，只有"打折季"。他们的钱包助记词刻在心里，十年不忘，连链上地址都背得滚瓜烂熟。朋友问他"什么时候能回本"，他平静地说："时间是朋友。"朋友又问："那你已经亏了多少？"他平静地关上了话题。`
+  },
+  "DEGEN": {
+    code: "DEGEN",
+    cn: "赌徒侠",
+    intro: "什么叫分析？什么叫研究？冲就完了！兄弟们！！",
+    desc: "DEGEN是链圈食物链上最危险也最快乐的生物。他们的人生哲学可以用两个字概括：冲就完了。白皮书？不看。团队背景？不查。市值？不重要，能买到就行。有人说好——冲。KOL发了张图——冲。群里出现火焰表情——冲。DEGEN的账户流水记录是一部史诗级赌场传记：里面有过三天翻十倍的辉煌，也有隔夜归零的惨烈，高潮与低谷的落差足以让柴可夫斯基当场谱曲。DEGEN人格的最高境界，是在全仓归零之后，擦干眼泪，打开交易软件，用最后那张没有逾期的信用卡，再次——冲。"
+  },
+  "MACRO": {
+    code: "MACRO",
+    cn: "宏观大师",
+    intro: "你看，美联储一旦降息，M2扩张，流动性就会……你听我说完……",
+    desc: `MACRO人格是链圈的知识分子，自带100页PPT和无限的讲课欲望。他们永远能把任何走势都用宏观经济框架解释得头头是道：美元指数、美债收益率曲线、M2货币供给、联储点阵图、CPI超预期……这些词在MACRO嘴里流出的频率，比BTC的价格还要稳定。有趣的是，MACRO的预测胜率并不见得高于普通散户，但这丝毫不影响他们发长文的热情和权威感。当你问他"现在能买吗"时，他会给你讲45分钟的宏观课，最后说一句："这要取决于下周的CPI数据。"你依然不知道该不该买，但你觉得他很厉害，这就够了。`
+  },
+  "NFT-MONK": {
+    code: "NFT-MONK",
+    cn: "JPG修士",
+    intro: "你不懂，这不只是图片，这是文化，是社区，是灵魂的归宿！",
+    desc: `NFT修士花了相当于三个月工资的ETH，买了一张像素猴子的头像图片。当你说"那不就是个jpg吗，右键保存就有了"时，他眼神里燃起了一团足以烧穿互联网的圣火。"你不懂，"他说，"这是文化认同，是去中心化艺术革命，是Web3.0身份的数字基石！"你点点头，假装理解了。他的Discord里有五百个同样买了猴子图片的兄弟，他们每天互相show图，喊"地板价"，喊"Diamond Hands"，偶尔一起哀悼那些清仓离场的"软手"。NFT修士活在一个由JPEG构成的平行宇宙，在那个宇宙里，那张8位像素猴子，是无价之宝，是身份，是家园。`
+  },
+  "TA-GOD": {
+    code: "TA-GOD",
+    cn: "画线圣人",
+    intro: "这里，头肩底，斐波那契61.8%，加上这条均线……完美，必涨。",
+    desc: "TA-GOD是链圈的画家，用彩色线条和几何图形在K线图上创作传世之作。他们能从一段走势里看出头肩底、双顶、上升楔形、旗形整理、杯柄形态，就像能从云朵里看出各种动物的那种人。每一根均线的金叉，每一个MACD的背离，每一个布林带的收口，对他们来说都是宇宙在低声耳语。TA-GOD会在推特上发出精美的图表，旁注「本人观点，不构成建议」——然后当市场完全沿相反方向运动时，他们会发出第二张图，说：「出现了新的变量，但在修正之后……」。TA-GOD的宿命就是永远在画，永远有解释，永远坚信下一次会准。"
+  },
+  "LUNA-TIC": {
+    code: "LUNA-TIC",
+    cn: "归零幸存者",
+    intro: "我见过地狱。所以我不再恐惧任何事情。",
+    desc: "LUNA-TIC是链圈最特殊的物种。他们经历过真正的清零：Luna生态崩盘那一夜，FTX暴雷那个早晨，某个rug pull的深夜，或者三者全部。资产在一夜之间归零，常人以为这足以摧毁一个人，但LUNA-TIC从灰烬里站了起来，眼神里多了一种旁人无法理解的平静与沧桑。他们是链圈最有资格说「见过世面」的人，他们会把自己的归零经历讲给新人听，语气云淡风轻，就好像在讲别人的故事。然后，他们会再次打开交易所。因为他们已经没有什么可以失去了，这反而让他们成了链圈最令人畏惧的玩家。"
+  },
+  "SHILL-LORD": {
+    code: "SHILL-LORD",
+    cn: "摇旗呐喊者",
+    intro: "兄弟们！！！！！这就是机会！！！！！上车！！！！！！",
+    desc: "SHILL-LORD是链圈生态中不可或缺的一环。他们的使命只有一个：喊。永远地喊。在任何群里、任何时间，他们都能为任何一个项目找到一百个上涨的理由，每条消息配上不少于五个感叹号和至少三个火焰表情。SHILL-LORD在群里叫喊的姿态，像极了菜市场里声音最大的摊主——声量最大的，未必卖的是最好的东西。但他们乐此不疲，因为喊就是他们的存在方式。有时候他们是真诚的，有时候他们持有大量底部仓位，有时候他们被项目方悄悄发了一笔「传播激励」——但无论动机是什么，他们的热情都是真实的，这是链圈最令人感动的一个特质。"
+  },
+  "PAPER-HAND": {
+    code: "PAPER-HAND",
+    cn: "纸手人",
+    intro: "跌了0.8%，不行了，我要割，我承受不住了。",
+    desc: "PAPER-HAND人格是链圈最真实的物种，虽然他们通常不愿承认自己是。他们持有一个项目的平均时长，大约等于一集电视剧。当价格上涨3%，会卖，因为「落袋为安」；当价格下跌2%，会卖，因为「止损是美德」；当价格横盘，还是会卖，因为「不涨就是在跌」。PAPER-HAND的人生是一场永无止境的「买了就跌，卖了就涨」的宿命轮回。他们卖出的那个价格，通常就是阶段底部；他们冲进去的那一刻，通常就是高点。这不是运气，这是一种天赋。大自然为了维持市场的流动性，创造了这个物种。"
+  },
+  "WHALE": {
+    code: "WHALE",
+    cn: "大鲸鱼",
+    intro: "我动了一下，你们就开始动了。有意思。",
+    desc: "WHALE是链圈的神，他们的买入能让图表瞬间竖起，他们的卖出能让整个社区崩溃嚎哭。但最有趣的是：真正的鲸鱼从不发言。真正的鲸鱼没有推特账号。真正的鲸鱼不在群里。所以，当一个人在群里高调宣称「我是大户，我持有几百个BTC」时，他几乎一定不是鲸鱼——他是在装鲸鱼的小虾米。真正的WHALE，安静地坐在某个没人知道的地址背后，看着链上数据，默默买，默默卖，然后看着散户们在他制造的波浪里哭喊着：「又被庄割了！！！」"
+  },
+  "PREACHER": {
+    code: "PREACHER",
+    cn: "区块链传教士",
+    intro: "去中心化，是人类历史的转折点！你不信？！来，坐下！",
+    desc: "PREACHER来到链圈，不只是为了赚钱——他们肩负着一个更崇高的使命：让全人类理解区块链的伟大。他们的朋友圈里，每天不少于三篇Web3.0文章；他们能在任何话题上绕回区块链：聊足球时「NFT门票是个好应用场景」，聊美食时「链上溯源可以解决食品安全」，聊你最近怎么样时「你有没有听说过DePIN」。PREACHER不是骗子，事实上他们比任何人都更真诚地相信这个技术将改变人类文明。这是他们最可爱的地方，也是和他们吃饭时最令人疲惫的地方。"
+  },
+  "KOL-VICTIM": {
+    code: "KOL-VICTIM",
+    cn: "KOL韭菜",
+    intro: "他说会涨，我就信了。我是真的信了。",
+    desc: "KOL-VICTIM不是蠢，他们只是善良。善良地相信那个声音洪亮、图表画得很漂亮的人，真的在为他们的财务状况着想，而不是在为自己的仓位着想。每次KOL发出「今晚必看」，他们第一时间点开；每次KOL说「已重仓」，他们跟着打开钱包；每次KOL沉默，他们开始心慌。KOL-VICTIM的投资组合是一张KOL推荐历史图谱——每一笔买入都有一个权威名字背书，每一笔亏损也都有一个权威名字可以埋怨。这个循环不会停止，因为KOL-VICTIM拥有人类最宝贵的品质：对下一次美好结果的永恒期待。"
+  },
+  "CRAB": {
+    code: "CRAB",
+    cn: "横盘蟹人",
+    intro: "我不涨，我也不跌，我就……在这儿……这样。",
+    desc: "CRAB人格是链圈的沉默多数。他们既不是坚定的HODL，也不是疯狂的DEGEN，他们的持仓就像最喜欢的那种币——横盘。日复一日，在某个价格区间上蹿下跳，就是不走。CRAB面对市场的态度是一种禅意的平静——或者说，是一种被磨平了一切激情之后的麻木。他们在群里的发言，永远是「等等看」和「再观察一下」。他们等了三年，观察了三年，市场终于出现了一个方向，他们说：「再等等，也许是假突破。」两年后，他们还在等。"
+  },
+  "SCAMMER": {
+    code: "SCAMMER",
+    cn: "骗子本尊",
+    intro: "恭喜你！你已被选中参与内测！只需支付一笔象征性手续费……",
+    desc: "测试结果已同步至相关单位，请注意查收传票。——开玩笑的。也许。SCAMMER是链圈生态中最神奇的存在，他们是这个市场的创造者之一，也是毁灭者之一。白皮书是他们的文学创作，路线图是他们的行为艺术，社区是他们精心搭建的舞台布景。SCAMMER最令人叹服之处不是贪婪，而是对人性的精准理解：他们知道人们想听什么、想相信什么、想要什么，然后把那个东西以最完美的形式呈现出来。每一个骗局的内核，都是一个真实的人性渴望。在某种程度上，SCAMMER是链圈最深刻的人类学家。只是……你最好别碰他们。"
+  },
+  "HHHHH": {
+    code: "HHHHH",
+    cn: "链圈异类",
+    intro: "哈哈哈哈，系统崩了，你的链圈人格已无法被分类。",
+    desc: "恭喜！由于您的脑回路过于奇特，链圈物种数据库已全面崩溃。CNMTI系统所能描述的12种物种，没有一种能覆盖您的特质——您可能同时是10种物种的混合体，也可能根本就不该出现在加密货币市场上，应该去做艺术家或者哲学家。不过，能让链圈物种鉴定局的系统直接死机，这本身就是一项了不起的成就。请查看十二维度数据，进行一次自我考古，也许你能在那里找到自己的碎片。"
+  },
+  "GURU": {
+    code: "GURU",
+    cn: "卖课大师",
+    intro: "你们来晚了……不过现在加入还来得及。扫码，限时优惠。",
+    desc: `GURU是链圈食物链的顶端物种——他们不靠炒币赚钱，而靠教别人炒币赚钱。这是链圈最古老的智慧：当淘金热来临，卖铲子的人才是最后的赢家。GURU的标准配置：一个高逼格个人IP（"前量化基金合伙人"或"管理过十亿规模私募"）；一套精心设计的课程体系，售价从699到69999不等；一个收费社群，里面每天发喊单，喊对了截图广发，喊错了集体失忆；外加一套无懈可击的话术，将每次亏损归结为"市场环境问题，你的心态还不够好"。GURU是否真的靠炒币赚到了钱？也许有，但他们更确定的收入来源，是你的学费。`
+  },
+};
+
+// ============================================================
+//  PATTERNS  (12 dims: R1 R2 R3 - I1 I2 I3 - C1 C2 C3 - M1 M2 M3)
+//  L/M/H per dimension
+// ============================================================
+const NORMAL_TYPES = [
+  // R1  R2  R3 | I1  I2  I3 | C1  C2  C3 | M1  M2  M3
+  { code: "HODL",       pattern: "LMM-MMM-LLM-MHH" }, // patient conviction, low community, high resolve
+  { code: "DEGEN",      pattern: "HHH-LLL-LLL-HLL" }, // pure gambler, anti-community, no ideology
+  { code: "MACRO",      pattern: "MML-HHM-LLL-LMH" }, // analyst loner, high info, zero community
+  { code: "NFT-MONK",   pattern: "HML-MLH-HHM-MHH" }, // identity builder, high narrative, high community
+  { code: "TA-GOD",     pattern: "MLM-MHH-LLM-MML" }, // chart hermit, high I2/I3, solitary
+  { code: "LUNA-TIC",   pattern: "HHL-LML-MMM-HHH" }, // battle-scarred, low info, max conviction
+  { code: "SHILL-LORD", pattern: "HMH-LLH-HHM-HMM" }, // hype creator, high narrative+broadcast, FOMO
+  { code: "PAPER-HAND", pattern: "LHM-LLM-MLM-LLM" }, // anxiety seller, high loss-pain, low resolve
+  { code: "WHALE",      pattern: "HLL-HML-LLL-HHH" }, // silent power, high info, zero social, no FOMO
+  { code: "PREACHER",   pattern: "MLM-HHH-HHM-LMH" }, // missionary, max info+community+ideology
+  { code: "KOL-VICTIM", pattern: "MHH-LLL-HMH-HLL" }, // passive follower, high FOMO+KOL崇拜, no narrative
+  { code: "CRAB",       pattern: "LLL-MMM-MMM-LML" }, // disengaged middle, all-passive
+];
+
+const DIM_EXPLANATIONS = {
+  R1: {
+    L: "面对波动你的第一反应是「先别动」，这在链圈属于濒危物种，请珍视自己。",
+    M: "你会冒险，但不会把棺材本都押上，理性尚存，尚可拯救。",
+    H: "你爱风险，风险也爱你，两者关系十分稳定，令人担忧。"
+  },
+  R2: {
+    L: "亏5%你就开始心跳加速，链圈对你来说本质上是一种极限运动。",
+    M: "你能承受一定回撤，但真跌狠了还是会有点人格解体。",
+    H: "账面浮亏80%？没事，这只是数字，数字是虚的，韭菜是真实的。"
+  },
+  R3: {
+    L: "群里无论怎么喊，你该干嘛干嘛，防FOMO能力满级，令人钦佩。",
+    M: "偶尔会被带节奏，但通常在点击转账前会冷静下来，好险。",
+    H: "看到「今晚必涨」四个字，你的手指已经自动打开了交易所，这是一种条件反射。"
+  },
+  I1: {
+    L: "信息甄别能力偏弱，韭菜属性相当突出，请远离私信你的陌生人。",
+    M: "会质疑，但质疑力度有时不够，仍有被割的空间，需要提高警惕。",
+    H: "骗局在你面前基本透明，要骗你需要至少十层嵌套和三个李鬼账号。"
+  },
+  I2: {
+    L: "K线对你来说是一幅随机抽象画，你靠感觉、直觉和今天看到的门牌号交易。",
+    M: "会看几个基础指标，有时管用，有时当成艺术欣赏，灵活。",
+    H: "你画的线比别人的资产记录还密，技术分析是你的宗教，K线是你的经文。"
+  },
+  I3: {
+    L: "你说不出为什么买，只是觉得能涨，这是一种源于洪荒的神秘直觉。",
+    M: "你能讲出一个基本说得通的故事，打动不了别人，但能说服自己。",
+    H: "你能把任何项目讲成「下一个以太坊」，说服力堪比连环计中的庞氏。"
+  },
+  C1: {
+    L: "你是链圈的独狼，不加群，不刷群，一个人在黑暗中默默交易，威严。",
+    M: "你在几个群里，但基本潜水，偶尔冒个泡，就像深海里的气泡。",
+    H: "你的微信和Telegram加起来有七八十个群，你的手机从未停止震动，你已与信息合为一体。"
+  },
+  C2: {
+    L: "你从不向别人推荐加密货币，这种克制在链圈是一种美德，也是一种孤独。",
+    M: "朋友问起你才说，不会主动传教，属于佛系布道者。",
+    H: "你的使命是让全人类进入区块链的光辉，七大姑八大姨都曾被你科普，无一幸免。"
+  },
+  C3: {
+    L: "你不追KOL，或者不相信KOL，事实上你认为追KOL的人是在用钱买教训。",
+    M: "KOL说的当参考，但不盲目跟单，属于理性观众。",
+    H: "大V说买你就买，大V沉默你就心慌，大V是你在链圈最后的精神支柱。"
+  },
+  M1: {
+    L: "你对暴富没有特别执念，对加密货币的态度比较克制，但为什么还在这里？",
+    M: "想赚钱，但也知道不是每个人都能暴富，这是难得的现实感。",
+    H: "你在深夜认真计算过，如果涨到X价格，你能去哪里退休，住什么户型，买什么车。"
+  },
+  M2: {
+    L: "你的市场韧性偏弱，容易被情绪带走，割肉止损是你的条件反射。",
+    M: "你能坚持，但坚持是有代价的，每根K线都是对你心脏的一次测试。",
+    H: "你可以在熊市里坚守四年，钻石手是你的身份证，也是你精神健康的最后一道屏障。"
+  },
+  M3: {
+    L: "去中心化对你来说是个词，不是信仰，你更关心价格，这没什么不好。",
+    M: "你认同去中心化的价值，但不会为此进行圣战或者发九宫格。",
+    H: "你相信区块链是人类解放的钥匙，银行是旧时代枷锁，中本聪是先知，你是信徒。"
+  },
+};
+
+// ============================================================
+//  APP STATE
+// ============================================================
+const app = {
+  shuffledQuestions: [],
+  answers: {},
+};
+
+const screens = {
+  intro: document.getElementById('intro'),
+  test: document.getElementById('test'),
+  result: document.getElementById('result'),
+};
+
+const questionList = document.getElementById('questionList');
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+const submitBtn = document.getElementById('submitBtn');
+const testHint = document.getElementById('testHint');
+
+// ============================================================
+//  UTILS
+// ============================================================
+function showScreen(name) {
+  Object.entries(screens).forEach(([key, el]) => {
+    el.classList.toggle('active', key === name);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function shuffle(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ============================================================
+//  QUESTION LOGIC
+// ============================================================
+const SP_GATE_ID = 'sp_pua_gate';
+const SP_TRIGGER_ID = 'sp_pua_detail';
+
+const specialQuestions = questions.filter(q => q.special);
+const regularQuestions = questions.filter(q => !q.special);
+const gateQuestion = specialQuestions.find(q => q.kind === 'pua_gate');
+const triggerQuestion = specialQuestions.find(q => q.kind === 'pua_trigger');
+
+function getVisibleQuestions() {
+  const visible = [...app.shuffledQuestions];
+  const gateIdx = visible.findIndex(q => q.id === SP_GATE_ID);
+  if (gateIdx !== -1 && app.answers[SP_GATE_ID] === 4) {
+    visible.splice(gateIdx + 1, 0, triggerQuestion);
+  }
+  return visible;
+}
+
+// ============================================================
+//  RENDER QUESTIONS
+// ============================================================
+function renderQuestions() {
+  const visible = getVisibleQuestions();
+  questionList.innerHTML = '';
+  visible.forEach((q, index) => {
+    const card = document.createElement('article');
+    card.className = 'question';
+    card.innerHTML = `
+      <div class="question-meta">
+        <div class="badge">第 ${index + 1} 题</div>
+        <div style="color:#3d4a7a;font-size:12px;">${q.special ? '补充题' : '维度评估'}</div>
+      </div>
+      <div class="question-title">${q.text}</div>
+      <div class="options">
+        ${q.options.map((opt, i) => {
+          const code = ['A','B','C','D'][i] || String(i+1);
+          const checked = app.answers[q.id] === opt.value ? 'checked' : '';
+          return `
+            <label class="option">
+              <input type="radio" name="${q.id}" value="${opt.value}" ${checked} />
+              <div class="option-code">${code}</div>
+              <div>${opt.label}</div>
+            </label>
+          `;
+        }).join('')}
+      </div>
+    `;
+    questionList.appendChild(card);
+  });
+
+  questionList.querySelectorAll('input[type="radio"]').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const { name, value } = e.target;
+      app.answers[name] = Number(value);
+      if (name === SP_GATE_ID) {
+        if (Number(value) !== 4) delete app.answers[SP_TRIGGER_ID];
+        renderQuestions();
+        return;
+      }
+      updateProgress();
+    });
+  });
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const visible = getVisibleQuestions();
+  const total = visible.length;
+  const done = visible.filter(q => app.answers[q.id] !== undefined).length;
+  const pct = total ? (done / total) * 100 : 0;
+  progressBar.style.width = `${pct}%`;
+  progressText.textContent = `${done} / ${total}`;
+  const complete = done === total && total > 0;
+  submitBtn.disabled = !complete;
+  testHint.textContent = complete
+    ? '全答完了。点击提交，CNMTI将正式为你的链圈人格开档存档。'
+    : '币价每秒都在跌，你倒是先把题做完。';
+}
+
+// ============================================================
+//  SCORING
+// ============================================================
+function levelFromScore(score, maxScore) {
+  const ratio = score / maxScore;
+  if (ratio < 0.4) return 'L';
+  if (ratio < 0.7) return 'M';
+  return 'H';
+}
+
+function levelNum(l) { return { L: 1, M: 2, H: 3 }[l]; }
+
+function parsePattern(pattern) {
+  return pattern.replace(/-/g, '').split('');
+}
+
+function computeResult() {
+  // 2 questions per dim, each max value 4, so maxScore per dim = 8
+  const rawScores = {};
+  dimensionOrder.forEach(d => { rawScores[d] = 0; });
+
+  regularQuestions.forEach(q => {
+    rawScores[q.dim] += Number(app.answers[q.id] || 0);
+  });
+
+  const levels = {};
+  dimensionOrder.forEach(dim => {
+    levels[dim] = levelFromScore(rawScores[dim], 8);
+  });
+
+  const userVector = dimensionOrder.map(dim => levelNum(levels[dim]));
+
+  const ranked = NORMAL_TYPES.map(type => {
+    const vec = parsePattern(type.pattern).map(c => ({L:1,M:2,H:3}[c]));
+    let distance = 0, exact = 0;
+    for (let i = 0; i < vec.length; i++) {
+      const diff = Math.abs(userVector[i] - vec[i]);
+      distance += diff;
+      if (diff === 0) exact++;
+    }
+    const similarity = Math.max(0, Math.round((1 - distance / 24) * 100));
+    return { ...type, ...TYPE_LIBRARY[type.code], distance, exact, similarity };
+  }).sort((a, b) => a.distance - b.distance);
+
+  // Among all types with the same (minimum) distance = same similarity %, pick one at random
+  const top = ranked[0];
+  const tied = ranked.filter(t => t.distance === top.distance);
+  const bestNormal = tied[Math.floor(Math.random() * tied.length)];
+
+  const isScammer = app.answers[SP_GATE_ID] === 4;
+  const isGuru = isScammer && app.answers[SP_TRIGGER_ID] !== undefined;
+  const isChaotic = bestNormal.similarity < 55;
+
+  let finalType, modeKicker, badge, sub, special = false;
+
+  if (isGuru) {
+    finalType = TYPE_LIBRARY["GURU"];
+    modeKicker = '隐藏人格已激活 · 卖课大师';
+    badge = '匹配度 100% · 链圈食物链顶端';
+    sub = '割韭菜是起点，卖铲子才是你的人生哲学。恭喜您。';
+    special = true;
+  } else if (isScammer) {
+    finalType = TYPE_LIBRARY["SCAMMER"];
+    modeKicker = '隐藏人格已激活 · 骗子本尊';
+    badge = '匹配度 100% · 相关部门已收到报告';
+    sub = '您已被记录在案。不，开玩笑的。也许。';
+    special = true;
+  } else if (isChaotic) {
+    finalType = TYPE_LIBRARY["HHHHH"];
+    modeKicker = '系统崩溃 · 强制兜底人格';
+    badge = `最高匹配仅 ${bestNormal.similarity}% · CNMTI数据库已宕机`;
+    sub = '您的链圈人格超出了本系统的理解范围，建议就医。';
+    special = true;
+  } else {
+    finalType = bestNormal;
+    modeKicker = '你的主类型';
+    badge = `匹配度 ${bestNormal.similarity}% · 精准命中 ${bestNormal.exact}/12 维`;
+    // Personalize the sub text based on standout dimensions
+    const highDims = dimensionOrder.filter(d => levels[d] === 'H');
+    const lowDims  = dimensionOrder.filter(d => levels[d] === 'L');
+    const dimQuips = {
+      R1: ['高风险偏好者','风险爱好者'], R2: ['高抗压选手','纸手选手'],
+      R3: ['重度FOMO患者','FOMO免疫体'], I1: ['信息盲区居民','骗局识别机'],
+      I2: ['画线信徒','感觉交易员'], I3: ['叙事大师','沉默的行动者'],
+      C1: ['群聊重度依赖者','孤独的独狼'], C2: ['传教热情高涨','拒绝传教主义'],
+      C3: ['KOL死忠粉','反KOL主义者'], M1: ['暴富执念满格','佛系投资人'],
+      M2: ['钻石手认证','割肉反射弧'],  M3: ['去中心化原教旨主义者','务实主义者'],
+    };
+    const tags = [
+      ...highDims.slice(0,2).map(d => dimQuips[d][0]),
+      ...lowDims.slice(0,1).map(d => dimQuips[d][1]),
+    ].filter(Boolean);
+    sub = tags.length
+      ? `标签：${tags.join(' · ')}。CNMTI已归档，欢迎截图发给被你推荐过买币的朋友。`
+      : `你的十二维度均衡得令人怀疑，CNMTI怀疑你不是真人，而是某个量化机器人。`;
+  }
+
+  return { rawScores, levels, ranked, bestNormal, finalType, modeKicker, badge, sub, special };
+}
+
+function renderDimList(result) {
+  const el = document.getElementById('dimList');
+  el.innerHTML = dimensionOrder.map(dim => {
+    const level = result.levels[dim];
+    const explanation = DIM_EXPLANATIONS[dim][level];
+    return `
+      <div class="dim-item">
+        <div class="dim-item-top">
+          <div class="dim-item-name">${dimensionMeta[dim].name}</div>
+          <div class="dim-item-score">${level} · ${result.rawScores[dim]}分</div>
+        </div>
+        <p>${explanation}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderResult() {
+  const result = computeResult();
+  const type = result.finalType;
+
+  document.getElementById('resultModeKicker').textContent = result.modeKicker;
+  document.getElementById('resultTypeName').textContent = `${type.code}（${type.cn}）`;
+  document.getElementById('matchBadge').textContent = result.badge;
+  document.getElementById('resultTypeSub').textContent = result.sub;
+  document.getElementById('resultDesc').textContent = type.desc;
+  document.getElementById('posterCaption').textContent = type.intro;
+  document.getElementById('funNote').textContent = result.special
+    ? '本测试仅供娱乐。隐藏人格是作者故意埋的损招，请勿当成任何诊断依据。CNMTI不构成投资建议、心理咨询或法律意见。'
+    : '本测试仅供娱乐，不构成任何投资建议。你测出HODL也不代表BTC会涨。如果你因此亏了钱，那是市场的问题，不是CNMTI的问题。';
+
+  const TYPE_EMOJI = {
+    "HODL":       "💎",
+    "DEGEN":      "🎰",
+    "MACRO":      "📊",
+    "NFT-MONK":   "🐒",
+    "TA-GOD":     "📈",
+    "LUNA-TIC":   "🌑",
+    "SHILL-LORD": "📣",
+    "PAPER-HAND": "🧻",
+    "WHALE":      "🐋",
+    "PREACHER":   "⛪",
+    "KOL-VICTIM": "🐑",
+    "CRAB":       "🦀",
+    "SCAMMER":    "🚨",
+    "GURU":       "🧙",
+    "HHHHH":      "🤯",
+  };
+
+  document.getElementById('posterEmoji').textContent = TYPE_EMOJI[type.code] || '🪙';
+
+  renderDimList(result);
+
+  // Runners-up: show 2nd and 3rd closest normal types (only for non-special results)
+  const runnersBox = document.getElementById('runnersUpBox');
+  const runnerList = document.getElementById('runnerList');
+  if (!result.special && result.ranked.length > 1) {
+    const runners = result.ranked.slice(1, 4).filter(t => t.similarity >= 40);
+    if (runners.length > 0) {
+      const rankLabels = ['亚军', '季军', '第四'];
+      runnerList.innerHTML = runners.map((t, i) => `
+        <div class="runner-item">
+          <span class="runner-rank">${rankLabels[i]}</span>
+          <span class="runner-name">${t.code}（${t.cn}）</span>
+          <span class="runner-pct">${t.similarity}%</span>
+        </div>
+      `).join('');
+      runnersBox.style.display = '';
+    } else {
+      runnersBox.style.display = 'none';
+    }
+  } else {
+    runnersBox.style.display = 'none';
+  }
+
+  // Store result for copy
+  app.lastResult = result;
+
+  showScreen('result');
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+function startTest() {
+  app.answers = {};
+  const shuffledReg = shuffle(regularQuestions);
+  const insertAt = Math.floor(Math.random() * shuffledReg.length) + 1;
+  app.shuffledQuestions = [
+    ...shuffledReg.slice(0, insertAt),
+    gateQuestion,
+    ...shuffledReg.slice(insertAt),
+  ];
+  renderQuestions();
+  showScreen('test');
+}
+
+document.getElementById('startBtn').addEventListener('click', startTest);
+document.getElementById('backIntroBtn').addEventListener('click', () => showScreen('intro'));
+document.getElementById('submitBtn').addEventListener('click', renderResult);
+document.getElementById('restartBtn').addEventListener('click', startTest);
+document.getElementById('toTopBtn').addEventListener('click', () => showScreen('intro'));
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  if (!app.lastResult) return;
+  const r = app.lastResult;
+  const type = r.finalType;
+  const highDims = dimensionOrder.filter(d => r.levels[d] === 'H').map(d => dimensionMeta[d].name);
+  const dimStr = highDims.length ? highDims.join(' / ') : '无明显高峰';
+  const runners = r.ranked ? r.ranked.slice(1, 3).map(t => `${t.code}(${t.similarity}%)`).join('、') : '';
+  const runnersLine = runners && !r.special ? `\n次接近物种：${runners}` : '';
+  const text = [
+    `我在 CNMTI 加密神经质市场创伤量表 中的鉴定结果：`,
+    ``,
+    `【${type.code}（${type.cn}）】`,
+    type.intro,
+    ``,
+    r.special ? `（隐藏人格）` : `匹配度 ${r.bestNormal.similarity}%`,
+    runnersLine,
+    ``,
+    `高分维度：${dimStr}`,
+    ``,
+    `🪙 CNMTI · 链圈物种鉴定局 · 纯属娱乐，不构成投资建议`,
+  ].join('\n');
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✅ 已复制！';
+    btn.classList.add('btn-copy-ok');
+    setTimeout(() => {
+      btn.textContent = '📋 复制结果';
+      btn.classList.remove('btn-copy-ok');
+    }, 2200);
+  }).catch(() => {
+    alert('复制失败，请手动截图分享。');
+  });
+});
+</script>
+</body>
+</html>
