@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 STONKS PSYCHIC EVALUATION™</title>
+<style>
+  :root{
+    --bg:#0a0a12; --bg2:#13132a;
+    --green:#00ff9d; --pink:#ff2d95; --purple:#9d4dff; --yellow:#ffe600; --blue:#3da9fc; --red:#ff4d4d;
+    --text:#e8e8f5; --muted:#7c7ca0;
+    --card:rgba(255,255,255,.04); --border:rgba(255,255,255,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(1200px 800px at 20% -10%,#1a1040 0%,transparent 60%),
+               radial-gradient(1000px 700px at 100% 0%,#3a0d3a 0%,transparent 55%),
+               linear-gradient(180deg,var(--bg),var(--bg2));
+    color:var(--text);min-height:100vh;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:"JetBrains Mono","SF Mono",Menlo,Consolas,monospace}
+  .meme{font-family:Impact,"Arial Black","Haettenschweiler",sans-serif;letter-spacing:.5px}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 18px 80px;position:relative;z-index:2}
+
+  .floaters{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:1;opacity:.5}
+  .floaters span{position:absolute;font-size:30px;animation:rise linear infinite;filter:grayscale(.2)}
+  @keyframes rise{from{transform:translateY(110vh) rotate(0)}to{transform:translateY(-15vh) rotate(360deg)}}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    font-size:12px;color:var(--muted);margin-bottom:22px;flex-wrap:wrap}
+  .topbar .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);display:inline-block;margin-right:6px;animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .ticker{color:var(--green)}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;
+    backdrop-filter:blur(6px);padding:30px 26px}
+
+  #intro .badge{display:inline-block;font-size:11px;letter-spacing:2px;color:var(--yellow);
+    border:1px solid var(--yellow);border-radius:999px;padding:5px 12px;margin-bottom:18px;text-transform:uppercase}
+  #intro h1{font-size:clamp(38px,9vw,72px);line-height:.95;margin-bottom:8px}
+  #intro h1 .a{color:var(--green)} #intro h1 .b{color:var(--pink)}
+  #intro .sub{color:var(--muted);font-size:16px;max-width:560px;margin:14px auto 26px;line-height:1.55}
+  .warn{background:rgba(255,77,77,.08);border:1px dashed var(--red);border-radius:12px;
+    padding:12px 14px;font-size:13px;color:#ffb3b3;margin:22px 0;line-height:1.5}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:20px 0 8px}
+  .stats div{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted)}
+  .stats b{display:block;font-size:20px;color:var(--text)}
+
+  button{cursor:pointer;font-family:inherit;border:none;border-radius:14px}
+  .btn{background:linear-gradient(135deg,var(--green),var(--blue));color:#04121a;font-weight:800;
+    padding:16px 30px;font-size:18px;border-radius:14px;box-shadow:0 8px 30px rgba(0,255,157,.25);
+    transition:transform .15s, box-shadow .15s}
+  .btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 12px 40px rgba(0,255,157,.4)}
+  .btn:active{transform:translateY(0)}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border);box-shadow:none}
+  .btn.ghost:hover{background:rgba(255,255,255,.06)}
+
+  .progress{height:10px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;margin-bottom:8px}
+  .progress > div{height:100%;background:linear-gradient(90deg,var(--pink),var(--purple),var(--green));width:0;transition:width .4s ease}
+  .qmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:22px}
+  .qemoji{font-size:54px;text-align:center;margin-bottom:10px;animation:pop .4s}
+  @keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+  .qtext{font-size:clamp(20px,4.5vw,26px);font-weight:800;line-height:1.35;text-align:center;margin-bottom:26px}
+  .opts{display:flex;flex-direction:column;gap:12px}
+  .opt{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;
+    padding:16px 18px;text-align:left;font-size:15px;line-height:1.45;color:var(--text);
+    display:flex;gap:12px;align-items:center;transition:all .15s}
+  .opt:hover{border-color:var(--green);background:rgba(0,255,157,.07);transform:translateX(4px)}
+  .opt .k{flex:0 0 auto;width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);
+    display:grid;place-items:center;font-size:13px;font-weight:800;color:var(--green);font-family:monospace}
+  .opt:hover .k{background:var(--green);color:#04121a}
+
+  .fade{animation:fadein .4s}
+  @keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  #result .code{font-size:clamp(40px,12vw,86px);font-weight:900;letter-spacing:4px;text-align:center;
+    background:linear-gradient(135deg,var(--green),var(--yellow),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 40px rgba(255,230,0,.2);line-height:1}
+  .typetitle{text-align:center;font-size:clamp(22px,5vw,34px);margin:8px 0 4px;text-transform:uppercase}
+  .spirit{text-align:center;font-size:48px;margin:14px 0;letter-spacing:4px}
+  .vibe{text-align:center;color:var(--yellow);font-size:14px;font-style:italic;margin-bottom:18px}
+  .desc{background:rgba(255,255,255,.03);border-left:3px solid var(--purple);border-radius:8px;
+    padding:14px 16px;font-size:15px;line-height:1.6;margin:18px 0;color:#d8d8ee}
+
+  .sectionlabel{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:26px 0 12px;display:flex;align-items:center;gap:8px}
+  .sectionlabel::after{content:"";flex:1;height:1px;background:var(--border)}
+
+  .meters{display:flex;flex-direction:column;gap:16px}
+  .meter-wrap .ml{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+  .meter-wrap .ml b{color:var(--green)}
+  .meter{position:relative;height:14px;border-radius:999px;overflow:visible}
+  .meter .bar{position:absolute;inset:0;border-radius:999px;opacity:.9}
+  .meter .pin{position:absolute;top:-4px;width:4px;height:22px;border-radius:2px;background:#fff;
+    box-shadow:0 0 10px #fff;transform:translateX(-50%);transition:left .8s cubic-bezier(.2,.9,.2,1)}
+
+  .predcard{background:linear-gradient(135deg,rgba(0,255,157,.07),rgba(61,169,252,.07));
+    border:1px solid rgba(0,255,157,.25);border-radius:16px;padding:18px;margin:14px 0}
+  .predcard .ptag{font-size:11px;color:var(--green);letter-spacing:2px;text-transform:uppercase}
+  .predcard .ptopic{font-size:19px;font-weight:800;margin:8px 0 12px;line-height:1.35}
+  .odds{display:flex;gap:10px;flex-wrap:wrap}
+  .odd{flex:1;min-width:120px;background:rgba(0,0,0,.25);border-radius:10px;padding:10px 12px}
+  .odd span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .odd b{display:block;font-size:18px;margin-top:3px}
+  .odd.yes b{color:var(--green)} .odd.no b{color:var(--pink)}
+  .predextra{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6}
+  .predextra .mono{color:var(--yellow)}
+
+  .taglist{display:flex;flex-wrap:wrap;gap:8px}
+  .tag{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:999px;
+    padding:7px 13px;font-size:13px;color:#cfcfe8}
+  .tag.hl{border-color:var(--pink);color:#ffc2dd}
+
+  .statgrid{display:grid;grid-template-columns:1fr;gap:14px}
+  .stati{display:flex;flex-direction:column;gap:6px}
+  .stati .top{display:flex;justify-content:space-between;font-size:13px}
+  .stati .top span:last-child{font-weight:800}
+  .sbar{height:12px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden}
+  .sbar > div{height:100%;width:0;border-radius:999px;transition:width 1s ease}
+
+  .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+  .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-160%);
+    background:var(--green);color:#04121a;padding:13px 20px;border-radius:12px;font-weight:800;
+    font-size:14px;text-align:center;max-width:90vw;
+    box-shadow:0 10px 40px rgba(0,255,157,.4);transition:transform .35s;z-index:60}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:40px;line-height:1.7}
+  a{color:var(--green)}
+  .hidden{display:none!important}
+  .burst{position:fixed;font-size:30px;z-index:40;pointer-events:none;animation:burst 1.4s ease-out forwards}
+  @keyframes burst{0%{transform:translate(0,0) scale(.4);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.4);opacity:0}}
+
+  @media(max-width:520px){
+    .card{padding:22px 18px}
+    .stats{gap:6px}
+    .stats div{padding:8px 10px}
+  }
+</style>
+</head>
+<body>
+<div class="floaters" id="floaters"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div><span class="dot"></span> LIVE · <span class="ticker">STONKS/PSYCHIC</span> pair</div>
+    <div class="mono">id: 0xD3G3N...C0PE</div>
+  </div>
+
+  <section id="intro" class="card">
+    <span class="badge">⚠️ 0% scientific · 100% vibes</span>
+    <h1 class="meme"><span class="a">THE DEGEN</span><br><span class="b">DIAGNOSIS™</span></h1>
+    <p class="sub">The internet's most unhinged prediction-market personality test. 12 questions. Zero financial advice. Maximum brain damage. Let's find out what kind of predictor you really are. (Spoiler: it's not good.)</p>
+
+    <div class="stats">
+      <div><b>16</b>deranged types</div>
+      <div><b>0</b>certified advisors</div>
+      <div><b>∞</b>copium reserves</div>
+    </div>
+
+    <div style="text-align:center;margin:24px 0">
+      <button class="btn" id="startBtn">BEGIN THE PSYCHIC EVALUATION 🚀</button>
+    </div>
+
+    <div class="warn">⚠️ WARNING: This test should not be used for actual financial decisions. Or any decisions. Ever. The creator is currently down 73% and is in no position to advise anyone on anything. Do not perceive me.</div>
+  </section>
+
+  <section id="quiz" class="card hidden">
+    <div class="progress"><div id="progFill"></div></div>
+    <div class="qmeta">
+      <span id="qCounter">Question 1 / 12</span>
+      <span class="mono" id="qPct">8% evaluated</span>
+    </div>
+    <div id="qBody"></div>
+  </section>
+
+  <section id="result" class="card hidden">
+    <div style="text-align:center;font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase">Diagnosis complete. God help you.</div>
+    <div class="code" id="rCode"></div>
+    <div class="spirit" id="rSpirit"></div>
+    <div class="typetitle meme" id="rTitle"></div>
+    <div class="vibe" id="rVibe"></div>
+    <div class="desc" id="rDesc"></div>
+
+    <div class="sectionlabel">📊 your trader dna (the 4 axes of brain damage)</div>
+    <div class="meters" id="rMeters"></div>
+
+    <div class="sectionlabel">🧠 stonks personality matrix</div>
+    <div class="statgrid" id="rStats"></div>
+
+    <div class="sectionlabel">🔮 your recommended prediction market</div>
+    <div class="predcard" id="rPred">
+      <div class="ptag">▲ FLAGSHIP BET · tailored to your exact flavor of unwell</div>
+      <div class="ptopic" id="rPredTopic"></div>
+      <div class="odds">
+        <div class="odd yes"><span>YES</span><b id="rYes"></b></div>
+        <div class="odd no"><span>NO</span><b id="rNo"></b></div>
+      </div>
+      <div class="predextra" id="rPredExtra"></div>
+    </div>
+
+    <div class="sectionlabel">✨ you also might want to predict</div>
+    <div class="taglist" id="rBonus"></div>
+
+    <div class="sectionlabel">💀 your spiritual memes</div>
+    <div class="taglist" id="rTags"></div>
+
+    <div class="sectionlabel">💸 current portfolio status</div>
+    <div class="desc" id="rStatus" style="border-left-color:var(--green)"></div>
+
+    <div class="actions">
+      <button class="btn" id="againBtn">DIAGNOSE AGAIN 🔄</button>
+      <button class="btn ghost" id="shareBtn">COPY MY DIAGNOSIS 📋</button>
+    </div>
+
+    <div class="foot">
+      not financial advice · not life advice · not anything advice<br>
+      you are now <span style="color:var(--pink)">-27%</span> more likely to make an emotional trade. wagmi (?) 🙏
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast">copied to clipboard (now post it, coward)</div>
+
+<script>
+const QUESTIONS = [
+  { e:"🌙", q:"It's 3AM. The timeline is SCREAMING about a coin called $BALLPIC. Up 40,000% in 9 minutes. What's the move?",
+    o:[["THE LINE GOES UP. UP IS GOOD. SELLING IS A SKILL ISSUE. APE. 🦍","D"],
+        ["I would like to see their LinkedIn. And their dental records. And a notarized letter from their mother.","N"]]},
+  { e:"📊", q:"Before placing a bet, you typically:",
+    o:[["Build a 14-tab DCF model, watch 47 finance YouTubers, cross-reference 3 subreddits.","R"],
+        ["Ask a pigeon. If the pigeon nods, I ape. The pigeon has never steered me wrong. (it has) 🐦","A"]]},
+  { e:"🦈", q:"The entire market just crashed 80%. Total carnage. Everyone is panicking. You:",
+    o:[["BLOOD IN THE STREETS. I AM BUYING YOUR TEARS. THIS IS MY SUPERMARKET AISLE.","W"],
+        ["oh god oh no everyone's selling should I sell mom said follow the crowd should I sell 🥺","H"]]},
+  { e:"😭", q:"You just lost 90% of your net worth in 4 minutes. Your immediate response:",
+    o:[["Skill issue on the market's part. It'll bounce back. I'm built different. Reentering my zen state 🧘","U"],
+        ["*posts red screenshot* 'imagine selling lol' *is openly weeping into a family-size bag of Doritos*","C"]]},
+  { e:"☠️", q:"Choose your weapon of choice:",
+    o:[["500x leverage on a coin whose ticker is literally just the skull emoji.","D"],
+        ["A high-yield savings account. 4.2% APY. Living on the edge. 🏦","N"]]},
+  { e:"🤝", q:"Someone with a laser-eye PFP DMs you 'this is going to 100x, trust me bro.' You:",
+    o:[["TRUST SECURED. WALLET OPENED. SEND THE CONTRACT IMMEDIATELY.","A"],
+        ["Who is this. Why do your eyes glow. Show me your Series A and your tax returns. 🧐","R"]]},
+  { e:"😎", q:"A mega-influencer just called your biggest conviction play 'mid and cringe.' You:",
+    o:[["Based. I double down. Influencers fear me. I am the algorithm now.","W"],
+        ["wait it's mid?? selling everything immediately thank you kind influencer may I have another 🥺","H"]]},
+  { e:"🦅", q:"You 10x'd your money overnight. First instinct:",
+    o:[["Compound it. Reinvent it. I am become Greed, destroyer of stop-losses. AGAIN.","U"],
+        ["Finally... I can almost pay off the thing I lost money on last quarter 😭","C"]]},
+  { e:"💩", q:"Describe your relationship with financial decisions made on the toilet:",
+    o:[["All of them. The porcelain throne IS my corner office. 👑","D"],
+        ["I make financial decisions exclusively inside a licensed bank lobby, like an adult. 🏛️","N"]]},
+  { e:"🫠", q:"Someone gently asks '...are you okay?' after your last trade. You reply:",
+    o:[["I have never been more okay. I am one with the universe and also I just bought more. 🕉️","U"],
+        ["define 'okay.' define 'fine.' define 'me.' define 'portfolio.'","C"]]},
+  { e:"🕯️", q:"Your 'research' process is best described as:",
+    o:[["FINAL_DD_v7_REALTHISTIME.xlsx, last modified 2 minutes ago, already outdated.","R"],
+        ["I stared at the candlestick chart until the candles started talking to me. They said 'buy.'","A"]]},
+  { e:"🎋", q:"Everyone you know is making money on a trade you skipped. You:",
+    o:[["Good for them. I have my own thesis. I am the reed that does not sway.","W"],
+        ["BUYBUYBUY AT THE ABSOLUTE TOP FOMO IS A SKILL I HAVE DECIDED 🥵","H"]]},
+];
+
+const TYPES = {
+  "DAWU":{title:"The Apex Schizo Whale",spirit:"🐋🗿🚀💎🔥",vibe:"ngmi? more like NERDS. gm 🙏",
+    desc:"You don't trade the market — the market trades around YOU. You bought $DOGE in 2013 with money you found in a couch. You've never read a whitepaper because reading is for people who still have a job. Your portfolio is up 43,000% and your blood pressure is up 43,000% with it. Strangers slide into your DMs, exchanges fear you, your accountant has entered witness protection.",
+    topic:"Will $GME hit $69,420 before the next full moon? 🌕",yes:"-4000%",no:"you 🤡",extra:"Suggested stake: your entire bloodline's inheritance. Implied edge: <span class='mono'>undefined</span> (you ARE the market).",
+    status:"💎 +43,201% · 'down from 44,000% but legends don't check the app'",
+    tags:["Unbothered Icon","Green Wojak","Stonks Man","Rare Pepe","Diamond Hands","gm 🙏"]},
+  "DAWC":{title:"The Copium Industrialist",spirit:"💎🙌😭📉🤡",vibe:"'I'm not down, I'm just early.' (you are down)",
+    desc:"Conviction of a god, emotional regulation of a soggy napkin. You diamond-hand everything straight into the ground and then post 'imagineselling.jpeg' while openly weeping. Your most-used app is the calculator trying to figure out your cost basis. It's bad. It's really bad. But you're BUILT DIFFERENT, so you'll never, ever admit it.",
+    topic:"Will your bags ever recover?",yes:"0.01¢",no:"'it's complicated' 💀",extra:"Volume traded: <span class='mono'>4 yrs of dignity</span>. Market sentiment on your bags: <span class='mono'>☠️</span>.",
+    status:"🩸 -91% · 'imagine selling' (you cannot, in fact, imagine selling)",
+    tags:["Copium.jpg","Sweating Diamond Hands","Imagineselling","Baggie","Crying Wojak","🤡"]},
+  "DAHU":{title:"The Distracted Goldfish",spirit:"🐕💫🧘🤷📈",vibe:"I follow the herd AND I'm unbothered. Busy.",
+    desc:"You ape into whatever the timeline screams loudest, hold it like it's your firstborn, and feel genuinely NOTHING when it dumps 99%. Conviction of wet paper, emotional stability of a monk on ketamine. You'll lose everything and respond 'this is the way 🙏' then immediately buy more. Nobody knows how you're so calm. Probably medication.",
+    topic:"Will the next dog-themed coin finally make you feel something? 🐕",yes:"13%",no:"87% (it won't)",extra:"Your emotional range: <span class='mono'>[vibing, vibing]</span>. Expected feelings from next bag: <span class='mono'>null</span>.",
+    status:"🤷 -68% · 'this is the way 🙏'",
+    tags:["Distracted Goldfish","This Is Fine","Chill Wojak","NPC #4471","Vibing Seal","🌊"]},
+  "DAHC":{title:"The 'This Is Fine' Housefire",spirit:"🔥🐶😭🤡💀",vibe:"It's fine. It's fine. It's fine.",
+    desc:"The textbook NPC-degen. You ape in on a hot tip from a stranger, panic when it dips, then aggressively cope on Crypto Twitter while your portfolio smolders. 'L, that's just how it goes.' Your entire net worth is currently on fire. 'Haha yeah no cap.' You are simultaneously the house AND the dog.",
+    topic:"Will you successfully blame 'whales' for your next -90%? 🐳",yes:"99%",no:"1%",extra:"Whales blamed this quarter: <span class='mono'>14</span>. Actual cause of losses: <span class='mono'>you</span>.",
+    status:"🔥 -88% · 'this is fine' (it is, in fact, not fine)",
+    tags:["This Is Fine Dog","Clown Pepe","NPC Wojak","Crying Cat","Bag Holder","💀"]},
+  "DRWU":{title:"The Renaissance Degen",spirit:"📊🧠🗿🦅📈",vibe:"Due diligence + max leverage = infinite IQ",
+    desc:"A rare specimen: you actually read the whitepaper AND you still 100x it. You're the one who found the exploit before the hackers did, then used the knowledge to buy more. Independent, informed, and absolutely unhinged with leverage. 'I have seen the matrix. It is bullish.' Terrifying because you might be right.",
+    topic:"Will a stablecoin named after a condiment depeg this quarter? 🥫",yes:"64%",no:"36%",extra:"You called it at 4%. Current odds: 64%. Your alpha: <span class='mono'>+600bps of pure ego</span>.",
+    status:"📈 +1,204% · 'I told you. nobody ever listens to me.'",
+    tags:["Stoic Scientist","Stonks PhD","Galaxy Brain","5head Pepe","Based Dept","🦅"]},
+  "DRWC":{title:"The Anxious Genius",spirit:"📊😰💎😭📉",vibe:"I modeled every outcome. I'm certain. I'm also terrified.",
+    desc:"You know EXACTLY why the trade is right — you have the 14-page doc to prove it — and you're still sweating bullets, refreshing the chart every 4 seconds. Iron hands, paper nerves. Your spreadsheets are immaculate and your sleep schedule is a recognized war crime. The thesis prints and you still feel sick about it.",
+    topic:"Will your thesis print before your hair finishes falling out? 💇",yes:"91%",no:"9%",extra:"Thesis confidence: <span class='mono'>91%</span>. Your cortisol: <span class='mono'>1,100%</span>. Hairs remaining: <span class='mono'>~ 40</span>.",
+    status:"📊 +12% · 'could be 14% if I'd timed it 2 mins better'",
+    tags:["Doomer","Anxiety Wojak","Worried 5head","Spreadsheet Pepe","🌧️","😭"]},
+  "DRHU":{title:"The r/WallStreetBets Scholar",spirit:"🦍🧘📚💎🤷",vibe:"Read it, held it, forgot it, vibing.",
+    desc:"You read the DD (that someone else wrote), hold your bags through nuclear winter, and feel absolutely NOTHING. 'I've done my own research,' you say, gesturing confidently at a Reddit post from 3 years ago. You're chill incarnate, which is great, because you are holding some truly cursed, unspeakable bags.",
+    topic:"Will your 'deep value' bag ever stop being deep? ⛏️",yes:"8%",no:"92%",extra:"Depth of bag: <span class='mono'>Mariana Trench</span>. Volume traded: <span class='mono'>your own tears</span>.",
+    status:"🦍 -55% · 'strong fundamentals though'",
+    tags:["Relaxed Ape","Wojak w/ Book","This Is Fine","Numb Diamond Hands","Zen Master","🦍"]},
+  "DRHC":{title:"The Spreadsheet Sadsack",spirit:"📊😭📉🤡🌧️",vibe:"I was right. I just lost money. That's fine. (it isn't)",
+    desc:"You did all the research, followed all the smart money, and STILL managed to lose money and feel terrible about it. The DD said buy, the herd said buy, you bought the absolute top, and now you're posting sad emoticons at 2AM. Your thesis was correct; your entry was a crime scene.",
+    topic:"Will you finally sell your 'quality project' at a loss? 📉",yes:"77%",no:"23%",extra:"The DD said HODL. Reality said <span class='mono'>-42%</span>. Cost basis: <span class='mono'>classified</span>.",
+    status:"📉 -42% · 'the DD was right, the entry was a war crime'",
+    tags:["Sad Soyjak","Spreadsheet Wojak","Baggie","Doomer","😭","🤡"]},
+  "NAWU":{title:"The Impulse Icon",spirit:"🛒🗿🔥🤷💸",vibe:"Index fund by day, chaos goblin by night.",
+    desc:"You keep your savings safe in a 401k... and then go absolutely feral on prediction markets at 11pm. You have no idea what you bought, you're confident as hell about it, and you feel zero stress. 'Idk what a bond is but I just bet my brunch money on Skibidi and I feel fantastic.' Honestly? Iconic.",
+    topic:"Will your 'just for fun' midnight bet accidentally make you rich? 🌙",yes:"4%",no:"96%",extra:"Wouldn't that be funny. It won't. <span class='mono'>ctrl+w</span> and go to bed.",
+    status:"✨ +310% · 'wait what did I even buy'",
+    tags:["Random Icon","Impulse Seal","Accidental Stonks","NPC by Day","Chaos Goblin","✨"]},
+  "NAWC":{title:"The YOLO Regretter",spirit:"🫠😰👀📱😭",vibe:"Calculated risk. Uncontrolled anxiety.",
+    desc:"You YOLO responsibly... then instantly panic. You bet only what you could afford to lose, and yet you CANNOT stop refreshing. Lone-wolf posture, hamster emotions. 'It's only $20 I'm fine I'm fine I'm fine I'm not fine.' You are currently refreshing this very sentence.",
+    topic:"Will you refresh this bet more than 200 times today? 👀",yes:"100%",no:"0%",extra:"You're already at 147. By tomorrow: <span class='mono'>3,200</span>. Your screen time: <span class='mono'>a problem</span>.",
+    status:"🫠 -3% · 'IT'S ONLY $20 I'M FINE I'M FINE'",
+    tags:["Anxiety Pepe","Yolo Wojak","Sweating Guy","Refresh Button","🫠","📱"]},
+  "NAHU":{title:"The FOMO Zen Master",spirit:"🧘🐑💸🌮😎",vibe:"I followed the herd into oblivion and I'm vibing.",
+    desc:"Your friend made money, so you copied the trade exactly, and somehow you're totally at peace even as it craters. No research, full herd behavior, zero stress. You're the most relaxed broke person alive. 'Money comes and goes, bro. Anyway — who's buying tacos?' Unfathomably chill.",
+    topic:"Will copying your friend's trade ever actually work for once? 🐑",yes:"11%",no:"89%",extra:"Plot twist: your friend is also down bad. <span class='mono'>Misery: shared. Tacos: also shared.</span>",
+    status:"😎 -40% · 'money comes and goes bro, who wants tacos'",
+    tags:["Zen Sheep","Chill Wojak","NPC Zen Master","Follow-The-Leader","Taco Tuesday","😎"]},
+  "NAHC":{title:"The 'I'll Just Hold' Copium Artisan",spirit:"🫙😭📉🐑🤡",vibe:"Holding = healing (allegedly)",
+    desc:"The most relatable trader alive. You aped in because everyone else did, you're down bad, and your entire coping mechanism is 'it'll bounce back' on a 3-to-5 year timeline. You open the app, see red, close the app, repeat 80 times daily. It's giving main character of a critically-acclaimed sad indie film.",
+    topic:"Will you hold your bag until the heat death of the universe? ☄️",yes:"88%",no:"12%",extra:"And beyond. Time-to-breakeven estimate: <span class='mono'>~ 4,500 years</span>.",
+    status:"😭 -71% · 'it'll bounce back (consult the 5-year chart)'",
+    tags:["Crying Wojak","Bag Holder Pro Max","Copium Pipe","NPC Sad","HODLer","😭"]},
+  "NRWU":{title:"The Dangerously Smart Conservative",spirit:"🧠📊🗿🦅😌",vibe:"Risk-adjusted returns + main-character energy",
+    desc:"You read everything, take tiny well-researched positions, and feel like an absolute deity about it. Boring portfolio, electric confidence. 'I allocate 3% to high-conviction plays,' you say, sounding absolutely unhinged about index funds. You're the most stable person on Crypto Twitter, which means you are a cryptid and nobody believes you exist.",
+    topic:"Will your 'boring' strategy quietly outperform everyone? 📈",yes:"73%",no:"27%",extra:"Insufferably. Your alpha: <span class='mono'>'told you so'</span> repeated annually for 40 years.",
+    status:"🧠 +8.4% · 'risk-adjusted. look it up.'",
+    tags:["Stoic Analyst","Galaxy Brain","Calm Stonks","5head","Final Boss Energy","🗿"]},
+  "NRWC":{title:"The Timing Obsessive",spirit:"⏰📊😰🌱😭",vibe:"Right strategy, zero peace.",
+    desc:"You've read every paper, made the conservative call, and STILL can't stop second-guessing whether you entered at 2:03pm or 2:04pm. Smart, independent, and genuinely unwell about basis points. 'Time IN the market beats TIMING the market,' you whisper, while actively timing the market.",
+    topic:"Will you ever stop rebalancing and just touch grass? 🌱",yes:"3%",no:"97%",extra:"Rebalances this month: <span class='mono'>841</span>. Grass touched: <span class='mono'>0</span>.",
+    status:"⏰ +5.1% · 'would be 6% if I'd entered 2 mins earlier'",
+    tags:["Overthinking Wojak","Anxiety Pepe","Clock Watcher","Panicking 5head","⏰","😰"]},
+  "NRHU":{title:"The Enlightened Index Legend",spirit:"📈😎📊🧘🦅",vibe:"Boring, diversified, and UNBOTHERED.",
+    desc:"You follow the smart money into sensible plays and feel literally nothing when they dip. You're basically a Vanguard ETF with a podcast. Your friends are sweating 100x coins; you're calmly up 7% YTD and feeling like the final boss. 'Compound interest is the eighth wonder,' legend — and you're not even stressed about it.",
+    topic:"Will 'boring' keep winning for the 47th year in a row? 📊",yes:"94%",no:"6%",extra:"You're chill either way. Touch grass: <span class='mono'>already did</span>. Haters: <span class='mono'>-99%</span>.",
+    status:"📈 +7.2% YTD · 'compound interest is the 8th wonder, legend'",
+    tags:["Index Legend","Vanguard Wojak","Boring Zen","Compound Legend","😎","📈"]},
+  "NRHC":{title:"The Certified Touch-Grass Enjoyer",spirit:"🌱😌📊😭🤡",vibe:"I did everything right and I'm still spiraling. 🌱",
+    desc:"You did the research, followed the consensus, took the safe bet — and you're STILL anxious about it. You are 100% going to be fine and 100% convinced you won't be. Please, for the love of everything, go outside. The portfolio is fine. YOU are the problem. Touch grass immediately. I am begging.",
+    topic:"Will you successfully log off for one (1) full day? 📵",yes:"0.4%",no:"99.6%",extra:"Longest streak without checking: <span class='mono'>11 minutes</span>. Grass proximity: <span class='mono'>negligible</span>.",
+    status:"🌱 +4.9% · 'why does 5% feel like a cardiac event'",
+    tags:["Touch Grass Meme","Sad Normie","Anxiety NPC","Anxious Green Frog","🌱","😌"]},
+};
+
+const BONUS = [
+  "🐕 Will a US city elect a dog as mayor this year?",
+  "🚽💍 Will someone marry the Skibidi Toilet on live TV?",
+  "🚀 Will a billionaire get stuck in orbit and DoorDash from space?",
+  "🎤 Will Drake respond to the next thing with a diss track OR a suspicious video?",
+  "💔 Will your crush text back? (auto-resolves NO)",
+  "🏟️ Will the next Super Bowl halftime just be 3 AI holograms arguing?",
+  "🏛️ Will someone rediscover the Roman Empire? (it's been in their head all day)",
+  "🌽 Will 'Ohio' officially secede from the Union?",
+  "🥧 Will a major CEO get pied this quarter?",
+  "📜 Will 'rizz' be added to the U.S. Constitution?",
+  "🌍 Will a meme coin reach a bigger market cap than a real country?",
+  "📅 Will the stock market crash on a day ending in 'y'?",
+  "🐉 Will someone launch an OnlyFans for their bearded dragon?",
+  "🖼️ Will someone pay $4M for a JPEG of a single pixel?",
+  "🤖 Will AI replace your job but somehow not your boss's?",
+  "🪐 Will the Metaverse still be completely empty by 2030?",
+  "👑 Will a reality TV star become president? (resolves YES, any year)",
+  "✨ Will 'very demure, very mindful' survive to 2027?",
+];
+
+const FLOAT_EMOJIS = ["💎","📈","🚀","🤡","🗿","🐸","💀","🔥","🙏","📉","🦍","🙌","💰","📉","🫠","☠️"];
+
+const state = { idx:0, scores:{D:0,N:0,A:0,R:0,W:0,H:0,U:0,C:0} };
+const $ = id => document.getElementById(id);
+
+(function buildFloaters(){
+  const box = $("floaters");
+  for(let i=0;i<18;i++){
+    const s=document.createElement("span");
+    s.textContent=FLOAT_EMOJIS[i%FLOAT_EMOJIS.length];
+    s.style.left=Math.random()*100+"%";
+    s.style.fontSize=(18+Math.random()*26)+"px";
+    s.style.animationDuration=(14+Math.random()*22)+"s";
+    s.style.animationDelay=(-Math.random()*30)+"s";
+    box.appendChild(s);
+  }
+})();
+
+$("startBtn").onclick = ()=>{ $("intro").classList.add("hidden"); $("quiz").classList.remove("hidden"); startQuiz(); };
+$("againBtn").onclick = ()=>{ $("result").classList.add("hidden"); $("quiz").classList.remove("hidden"); startQuiz(); window.scrollTo({top:0,behavior:"smooth"}); };
+$("shareBtn").onclick = shareResult;
+
+document.addEventListener("keydown",e=>{
+  if(!$("quiz").classList.contains("hidden")){
+    if(["1","2","3"].includes(e.key)){ const btns=document.querySelectorAll(".opt"); if(btns[e.key-1]) btns[e.key-1].click(); }
+  }
+  if(!$("intro").classList.contains("hidden") && e.key==="Enter") $("startBtn").click();
+});
+
+function startQuiz(){
+  state.idx=0;
+  state.scores={D:0,N:0,A:0,R:0,W:0,H:0,U:0,C:0};
+  renderQ();
+}
+function renderQ(){
+  const q=QUESTIONS[state.idx];
+  const pct=Math.round((state.idx/QUESTIONS.length)*100);
+  $("progFill").style.width=pct+"%";
+  $("qCounter").textContent=`Question ${state.idx+1} / ${QUESTIONS.length}`;
+  $("qPct").textContent=pct+"% evaluated";
+  const body=$("qBody");
+  body.classList.remove("fade"); void body.offsetWidth; body.classList.add("fade");
+  body.innerHTML=`<div class="qemoji">${q.e}</div>
+    <div class="qtext">${q.q}</div>
+    <div class="optlist"></div>`;
+  const list=body.querySelector(".optlist");
+  list.className="opts";
+  q.o.forEach((opt,i)=>{
+    const b=document.createElement("button");
+    b.className="opt";
+    b.innerHTML=`<span class="k">${i+1}</span><span>${opt[0]}</span>`;
+    b.onclick=()=>answer(opt[1]);
+    list.appendChild(b);
+  });
+}
+function answer(pole){
+  state.scores[pole]++;
+  if(state.idx < QUESTIONS.length-1){ state.idx++; renderQ(); }
+  else { $("progFill").style.width="100%"; $("qPct").textContent="100% evaluated"; setTimeout(showResult,300); }
+}
+
+function pick(a,b){
+  const sa=state.scores[a], sb=state.scores[b];
+  if(sa>sb) return a;
+  if(sb>sa) return b;
+  return Math.random()<0.5 ? a : b;
+}
+function showResult(){
+  const code = pick("D","N")+pick("A","R")+pick("W","H")+pick("U","C");
+  const t = TYPES[code];
+  const dN = state.scores.D+state.scores.N, aR = state.scores.A+state.scores.R,
+        wH = state.scores.W+state.scores.H, uC = state.scores.U+state.scores.C;
+  const dF=state.scores.D/dN, aF=state.scores.A/aR, wF=state.scores.W/wH, uF=state.scores.U/uC;
+
+  $("rCode").textContent=code;
+  $("rSpirit").textContent=t.spirit;
+  $("rTitle").textContent=t.title;
+  $("rVibe").textContent='"'+t.vibe+'"';
+  $("rDesc").textContent=t.desc;
+  $("rPredTopic").textContent=t.topic;
+  $("rYes").textContent=t.yes;
+  $("rNo").textContent=t.no;
+  $("rPredExtra").innerHTML=t.extra;
+  $("rStatus").textContent=t.status;
+
+  const axes=[
+    ["DEGEN","NORMIE",dF,"linear-gradient(90deg,var(--green),var(--blue))"],
+    ["APE","RESEARCHER",aF,"linear-gradient(90deg,var(--pink),var(--purple))"],
+    ["WOLF","HERD",wF,"linear-gradient(90deg,var(--yellow),var(--red))"],
+    ["UNBOTHERED","COPING",uF,"linear-gradient(90deg,var(--green),var(--pink))"],
+  ];
+  $("rMeters").innerHTML = axes.map(([l,r,f,grad])=>{
+    const pct=Math.round(f*100); const dom=f>=.5?l:r;
+    return `<div class="meter-wrap">
+      <div class="ml"><span>${l} <span style="color:var(--muted)">←→</span> ${r}</span><b>${pct}% ${dom}</b></div>
+      <div class="meter"><div class="bar" style="background:${grad}"></div><div class="pin" style="left:${pct}%"></div></div>
+    </div>`;
+  }).join("");
+
+  const wallet = Math.round((dF*0.45 + aF*0.30 + (1-uF)*0.25)*100);
+  const brain  = Math.round((dF*0.38 + aF*0.42 + wF*0.20)*100);
+  const grass  = Math.round((dF*0.40 + aF*0.25 + (1-uF)*0.35)*100);
+  const stats=[
+    ["💸 Wallet Damage Level",wallet,"linear-gradient(90deg,var(--yellow),var(--red))"],
+    ["🧠 Brain Damage Level",brain,"linear-gradient(90deg,var(--purple),var(--pink))"],
+    ["🌱 Touch-Grass Deficit",grass,"linear-gradient(90deg,var(--green),var(--yellow))"],
+  ];
+  $("rStats").innerHTML=stats.map(([lab,v,grad])=>{
+    const tag = v>=80?" ☠️ CRITICAL":v>=60?" 🔴 severe":v>=40?" 🟡 moderate":v>=20?" 🟢 mild":" 💚 negligible";
+    return `<div class="stati"><div class="top"><span>${lab}</span><span style="color:var(--green)">${v}%${tag}</span></div>
+      <div class="sbar"><div style="background:${grad}" data-w="${v}"></div></div></div>`;
+  }).join("");
+  setTimeout(()=>document.querySelectorAll("#rStats .sbar > div").forEach(b=>b.style.width=b.dataset.w+"%"),120);
+
+  const bonus=[...BONUS];
+  for(let i=bonus.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bonus[i],bonus[j]]=[bonus[j],bonus[i]];}
+  $("rBonus").innerHTML=bonus.slice(0,3).map(b=>`<span class="tag hl">${b}</span>`).join("");
+
+  $("rTags").innerHTML=t.tags.map(x=>`<span class="tag">${x}</span>`).join("");
+
+  $("quiz").classList.add("hidden");
+  $("result").classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+  burstEmojis(t.spirit);
+  state.lastCode=code; state.lastTitle=t.title; state.lastVibe=t.vibe;
+}
+function burstEmojis(cluster){
+  const arr=[...cluster,..."💎🚀🤡🗿"];
+  for(let i=0;i<26;i++){
+    const s=document.createElement("div");
+    s.className="burst";
+    s.textContent=arr[i%arr.length];
+    s.style.left=(40+Math.random()*20)+"vw";
+    s.style.top="40vh";
+    s.style.setProperty("--dx",(Math.random()*600-300)+"px");
+    s.style.setProperty("--dy",(-Math.random()*500-100)+"px");
+    s.style.fontSize=(20+Math.random()*24)+"px";
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),1500);
+  }
+}
+function shareResult(){
+  const txt=`My STONKS PSYCHIC DIAGNOSIS™:\n\n${state.lastCode} — ${state.lastTitle.toUpperCase()}\n"${state.lastVibe}"\n\nGot 0% financial advice and 100% brain damage. What's your trader type? 📊🗿`;
+  navigator.clipboard?.writeText(txt).then(()=>{
+    const t=$("toast"); t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200);
+  }).catch(()=>{
+    const t=$("toast"); t.textContent="couldn't copy, but you're still unwell"; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200);
+  });
+}
+</script>
+</body>
+</html>
